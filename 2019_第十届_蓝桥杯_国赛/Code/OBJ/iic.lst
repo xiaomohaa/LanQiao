@@ -1,0 +1,200 @@
+C51 COMPILER V9.59.0.0   IIC                                                               01/10/2020 22:24:54 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE IIC
+OBJECT MODULE PLACED IN ..\OBJ\iic.obj
+COMPILER INVOKED BY: F:\Keil_v5\C51\BIN\C51.EXE ..\HARDWARE\iic.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\INC) DEBUG OBJECTEX
+                    -TEND PRINT(..\OBJ\iic.lst) TABS(2) OBJECT(..\OBJ\iic.obj)
+
+line level    source
+
+   1          #include "sys.h"
+   2          
+   3          #define somenop {_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_
+             -nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_
+             -nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();}    
+   4          
+   5          //总线引脚定义
+   6          sbit SDA = P2^1;  /* 数据线 */
+   7          sbit SCL = P2^0;  /* 时钟线 */
+   8          
+   9          
+  10          //总线启动条件
+  11          void IIC_Start(void)
+  12          {
+  13   1        SDA = 1;
+  14   1        SCL = 1;
+  15   1        somenop;
+  16   1        SDA = 0;
+  17   1        somenop;
+  18   1        SCL = 0;  
+  19   1      }
+  20          
+  21          //总线停止条件
+  22          void IIC_Stop(void)
+  23          {
+  24   1        SDA = 0;
+  25   1        SCL = 1;
+  26   1        somenop;
+  27   1        SDA = 1;
+  28   1      }
+  29          
+  30          //应答位控制
+  31          void IIC_Ack(bit ackbit)
+  32          {
+  33   1        if(ackbit) 
+  34   1        { 
+  35   2          SDA = 0;
+  36   2        }
+  37   1        else 
+  38   1        {
+  39   2          SDA = 1;
+  40   2        }
+  41   1        somenop;
+  42   1        SCL = 1;
+  43   1        somenop;
+  44   1        SCL = 0;
+  45   1        SDA = 1; 
+  46   1        somenop;
+  47   1      }
+  48          
+  49          //等待应答
+  50          bit IIC_WaitAck(void)
+  51          {
+  52   1        SDA = 1;
+C51 COMPILER V9.59.0.0   IIC                                                               01/10/2020 22:24:54 PAGE 2   
+
+  53   1        somenop;
+  54   1        SCL = 1;
+  55   1        somenop;
+  56   1        if(SDA)    
+  57   1        {   
+  58   2          SCL = 0;
+  59   2          IIC_Stop();
+  60   2          return 0;
+  61   2        }
+  62   1        else  
+  63   1        { 
+  64   2          SCL = 0;
+  65   2          return 1;
+  66   2        }
+  67   1      }
+  68          
+  69          //通过I2C总线发送数据
+  70          void IIC_SendByte(unsigned char byt)
+  71          {
+  72   1        unsigned char i;
+  73   1        for(i=0;i<8;i++)
+  74   1        {   
+  75   2          if(byt&0x80) 
+  76   2          { 
+  77   3            SDA = 1;
+  78   3          }
+  79   2          else 
+  80   2          {
+  81   3            SDA = 0;
+  82   3          }
+  83   2          somenop;
+  84   2          SCL = 1;
+  85   2          byt <<= 1;
+  86   2          somenop;
+  87   2          SCL = 0;
+  88   2        }
+  89   1      }
+  90          
+  91          //从I2C总线上接收数据
+  92          unsigned char IIC_RecByte(void)
+  93          {
+  94   1        unsigned char da;
+  95   1        unsigned char i;
+  96   1        
+  97   1        for(i=0;i<8;i++)
+  98   1        {   
+  99   2          SCL = 1;
+ 100   2          somenop;
+ 101   2          da <<= 1;
+ 102   2          if(SDA) 
+ 103   2          da |= 0x01;
+ 104   2          SCL = 0;
+ 105   2          somenop;
+ 106   2        }
+ 107   1        return da;
+ 108   1      }
+ 109          
+ 110          unsigned char Read_AIN(unsigned char chn)
+ 111          {
+ 112   1        unsigned char val;
+ 113   1        unsigned char dat;
+ 114   1        EA = 0;
+C51 COMPILER V9.59.0.0   IIC                                                               01/10/2020 22:24:54 PAGE 3   
+
+ 115   1        IIC_Start();            //IIC总线起始信号             
+ 116   1        IIC_SendByte(0x90);     //PCF8591的写设备地址   
+ 117   1        IIC_WaitAck();          //等待从机应答    
+ 118   1        IIC_SendByte(chn);      //写入PCF8591的控制字节   
+ 119   1        IIC_WaitAck();          //等待从机应答            
+ 120   1        IIC_Stop();             //IIC总线停止信号         
+ 121   1        
+ 122   1        IIC_Start();            //IIC总线起始信号                 
+ 123   1        IIC_SendByte(0x91);     //PCF8591的读设备地址   
+ 124   1        IIC_WaitAck();          //等待从机应答    
+ 125   1        dat = IIC_RecByte();    //读取PCF8591通道chn的数据      
+ 126   1        IIC_Ack(0);             //产生非应答信号        
+ 127   1        IIC_Stop();             //IIC总线停止信号   
+ 128   1        val = (u8)(((u16)dat * (50000 / 255)) / 1000);
+ 129   1        EA = 1;
+ 130   1        
+ 131   1        return val; 
+ 132   1      }
+ 133          
+ 134          
+ 135          void Write_E2PROM(unsigned char add, unsigned char dat)
+ 136          {
+ 137   1        EA = 0;
+ 138   1        IIC_Start();
+ 139   1        IIC_SendByte(0xa0); //发送器件地址
+ 140   1        IIC_WaitAck();
+ 141   1        IIC_SendByte(add);  //发送操作地址
+ 142   1        IIC_WaitAck();
+ 143   1        IIC_SendByte(dat);  //写一字节
+ 144   1        IIC_WaitAck();
+ 145   1        IIC_Stop();
+ 146   1        somenop;
+ 147   1        EA = 1;
+ 148   1      }
+ 149          
+ 150          unsigned char Read_E2PROM(unsigned char add)
+ 151          {
+ 152   1        unsigned char d;
+ 153   1        
+ 154   1        IIC_Start();
+ 155   1        IIC_SendByte(0xa0);   //发送器件地址
+ 156   1        IIC_WaitAck();
+ 157   1        IIC_SendByte(add);    //发送要操作的地址
+ 158   1        IIC_WaitAck();
+ 159   1        IIC_Stop();
+ 160   1        
+ 161   1        IIC_Start();
+ 162   1        IIC_SendByte(0xa1);   //发送读操作
+ 163   1        IIC_WaitAck();
+ 164   1        d = IIC_RecByte();  //读一字节
+ 165   1        IIC_Ack(0);
+ 166   1        IIC_Stop();
+ 167   1        return d;
+ 168   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    667    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+C51 COMPILER V9.59.0.0   IIC                                                               01/10/2020 22:24:54 PAGE 4   
+
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       1
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

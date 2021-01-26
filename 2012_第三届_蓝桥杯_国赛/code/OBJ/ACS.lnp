@@ -1,0 +1,8 @@
+"..\OBJ\display.obj",
+"..\OBJ\key.obj",
+"..\OBJ\iic.obj",
+"..\OBJ\ds1302.obj",
+"..\OBJ\sys.obj",
+"..\OBJ\main.obj" 
+TO "..\OBJ\ACS" 
+PRINT("..\OBJ\ACS.m51") RAMSIZE(256) 

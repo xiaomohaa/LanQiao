@@ -1,0 +1,191 @@
+C51 COMPILER V9.59.0.0   DISPLAY                                                           05/10/2019 00:57:54 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE DISPLAY
+OBJECT MODULE PLACED IN ..\OBJ\display.obj
+COMPILER INVOKED BY: F:\Keil_v5\C51\BIN\C51.EXE ..\HARDWARE\display.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(..\INC) DEBU
+                    -G OBJECTEXTEND PRINT(..\OBJ\display.lst) TABS(2) OBJECT(..\OBJ\display.obj)
+
+line level    source
+
+   1          #include "sys.h"
+   2          
+   3          unsigned char code table[]={0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xf8, 
+   4                                      0x80, 0x90, 0x88, 0x83, 0xc6, 0xa1, 0x86, 0x8e,
+   5                                      0xff, 0xbf, 0xc1, 0x89, 0x8c};  //18-U 19-H 20-P
+   6          unsigned char TubeBuff[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+   7          unsigned char smg1, smg2, smg3, smg4, smg5, smg6, smg7, smg8;
+   8          
+   9          void TubeScan(void)
+  10          {
+  11   1        static u8 index = 0;
+  12   1        
+  13   1        P0 = 0x00;
+  14   1        P2 = (P2 & 0x1f) | 0xc0;
+  15   1        P0 = 0x01 << index;
+  16   1        P2 = P2 & 0x1f;
+  17   1        
+  18   1        P0 = 0xff;
+  19   1        P2 = (P2 & 0x1f) | 0xe0;
+  20   1        P0 = TubeBuff[index];
+  21   1        P2 = P2 & 0x1f;
+  22   1        
+  23   1        index ++;
+  24   1        index &= 0x07;
+  25   1      }
+  26          
+  27          void TubeShow(void)
+  28          {
+  29   1        //mode == 1 显示RB2电压
+  30   1        if(mode == 1)
+  31   1        {
+  32   2          smg1 = 18;  //U
+  33   2          smg2 = smg3 = smg4 = smg5 = smg6 = 16;
+  34   2          smg7 = Vol / 10;
+  35   2          smg8 = Vol % 10;
+  36   2        }
+  37   1        
+  38   1        //mode == 2 显示频率
+  39   1        else if(mode == 2)
+  40   1        {
+  41   2          smg1 = 15;  //F
+  42   2          smg2 = smg3 = 16;
+  43   2          smg4 = Fre / 10000;
+  44   2          smg5 = (Fre % 10000) / 1000;
+  45   2          smg6 = (Fre % 1000) / 100;
+  46   2          smg7 = (Fre % 100) / 10;
+  47   2          smg8 = Fre % 10;
+  48   2          
+  49   2          if(smg4 == 0)
+  50   2          {
+  51   3            smg4 = 16;
+  52   3            if(smg5 == 0)
+  53   3            {
+  54   4              smg5 = 16;
+C51 COMPILER V9.59.0.0   DISPLAY                                                           05/10/2019 00:57:54 PAGE 2   
+
+  55   4              if(smg6 == 0)
+  56   4              {
+  57   5                smg6 = 16;
+  58   5                if(smg7 == 0)
+  59   5                  smg7 = 16;
+  60   5              }
+  61   4            }
+  62   3          }
+  63   2        }
+  64   1        
+  65   1        //mode == 3 显示温度
+  66   1        else if(mode == 3)
+  67   1        {
+  68   2          smg1 = 12;    //T
+  69   2          smg2 = smg3 = smg4 = 16;
+  70   2          smg5 = Temper_int / 10;
+  71   2          smg6 = Temper_int % 10;
+  72   2          smg7 = Temper_dec / 10;
+  73   2          smg8 = Temper_dec % 10;
+  74   2          
+  75   2          if(smg5 == 0)
+  76   2            smg5 = 16;
+  77   2        }
+  78   1        
+  79   1        //mode == 4 显示阈值设置
+  80   1        else if(mode == 4)
+  81   1        {
+  82   2          smg1 = 20;
+  83   2          smg2 = smg3 = smg4 = smg5 = smg6 = 16;
+  84   2          smg7 = VTH / 10;
+  85   2          smg8 = VTH % 10;
+  86   2        }
+  87   1      
+  88   1        //mode == 5 回显RB2电压
+  89   1        else if(mode == 5)
+  90   1        {
+  91   2          smg1 = 19;  //H
+  92   2          smg2 = 18;  //U
+  93   2          smg3 = smg4 = smg5 = smg6 = 16;
+  94   2          smg7 = H_Vol / 10;
+  95   2          smg8 = H_Vol % 10;
+  96   2        }
+  97   1        
+  98   1        //mode == 6 回显频率
+  99   1        else if(mode == 6)
+ 100   1        {
+ 101   2          smg1 = 19;  //H
+ 102   2          smg2 = 15;  //F
+ 103   2          smg3 = 16;
+ 104   2          smg4 = H_Fre / 10000;
+ 105   2          smg5 = (H_Fre % 10000) / 1000;
+ 106   2          smg6 = (H_Fre % 1000) / 100;
+ 107   2          smg7 = (H_Fre % 100) / 10;
+ 108   2          smg8 = H_Fre % 10;
+ 109   2          
+ 110   2          if(smg4 == 0)
+ 111   2          {
+ 112   3            smg4 = 16;
+ 113   3            if(smg5 == 0)
+ 114   3            {
+ 115   4              smg5 = 16;
+ 116   4              if(smg6 == 0)
+C51 COMPILER V9.59.0.0   DISPLAY                                                           05/10/2019 00:57:54 PAGE 3   
+
+ 117   4              {
+ 118   5                smg6 = 16;
+ 119   5                if(smg7 == 0)
+ 120   5                  smg7 = 16;
+ 121   5              }
+ 122   4            }
+ 123   3          }
+ 124   2        }
+ 125   1        
+ 126   1        //mode == 7 回显温度
+ 127   1        else if(mode == 7)
+ 128   1        {
+ 129   2          smg1 = 19;  //H
+ 130   2          smg2 = 12;  //T
+ 131   2          smg3 = smg4 = 16;
+ 132   2          smg5 = H_Temper_int / 10;
+ 133   2          smg6 = H_Temper_int % 10;
+ 134   2          smg7 = H_Temper_dec / 10;
+ 135   2          smg8 = H_Temper_dec % 10;
+ 136   2          
+ 137   2          if(smg5 == 0)
+ 138   2            smg5 = 16;
+ 139   2        }
+ 140   1        
+ 141   1        TubeBuff[0] = table[smg1];
+ 142   1        TubeBuff[1] = table[smg2];
+ 143   1        TubeBuff[2] = table[smg3];
+ 144   1        TubeBuff[3] = table[smg4];
+ 145   1        TubeBuff[4] = table[smg5];
+ 146   1        TubeBuff[5] = table[smg6];
+ 147   1        TubeBuff[6] = table[smg7];
+ 148   1        TubeBuff[7] = table[smg8];
+ 149   1        
+ 150   1        //添加小数点
+ 151   1        if((mode == 1) || (mode == 5) || (mode == 4))
+ 152   1          TubeBuff[6] &= 0x7f;
+ 153   1        else if((mode == 3) || (mode == 7))
+ 154   1          TubeBuff[5] &= 0x7f;
+ 155   1      }
+ 156          
+ 157          void LedWork(u8 leddat)
+ 158          {
+ 159   1        P0 = 0xff;
+ 160   1        P2 = (P2 & 0x1f) | 0x80;
+ 161   1        P0 = leddat;
+ 162   1        P2 = P2 & 0x1f;
+ 163   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1004    ----
+   CONSTANT SIZE    =     21    ----
+   XDATA SIZE       =     17    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

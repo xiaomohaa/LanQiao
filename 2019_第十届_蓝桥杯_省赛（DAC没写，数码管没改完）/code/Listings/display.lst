@@ -1,0 +1,117 @@
+C51 COMPILER V9.59.0.0   DISPLAY                                                           03/29/2019 21:34:57 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE DISPLAY
+OBJECT MODULE PLACED IN .\Objects\display.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE display.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\d
+                    -isplay.lst) TABS(2) OBJECT(.\Objects\display.obj)
+
+line level    source
+
+   1          #include "sys.h"
+   2          
+   3          unsigned char code table[]={0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xf8, 
+   4                                      0x80, 0x90, 0x88, 0x83, 0xc6, 0xa1, 0x86, 0x8e,
+   5                                      0xff, 0xbf, 0xc1};
+   6          unsigned char TubeBuff[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+   7          unsigned char smg1, smg2, smg3, smg4, smg5, smg6, smg7, smg8;
+   8          
+   9          void TubeShow(void)
+  10          {
+  11   1        static unsigned char index = 0;
+  12   1        
+  13   1        P0 = 0x00;
+  14   1        P2 = (P2 & 0x1f) | 0xc0;
+  15   1        P0 = 0x01 << index;
+  16   1        P2 = P2 & 0x1f;
+  17   1        
+  18   1        P0 = 0xff;
+  19   1        P2 = (P2 & 0x1f) | 0xe0;
+  20   1        P0 = TubeBuff[index];
+  21   1        P2 = P2 & 0x1f;
+  22   1        
+  23   1        index ++;
+  24   1        index &= 0x07;
+  25   1      }
+  26          
+  27          void TubeScan(void)
+  28          {
+  29   1        //如果为测频显示，这样显示
+  30   1        if(mode == 1)
+  31   1        {
+  32   2          smg1 = 15;    //显示F
+  33   2          smg2 =smg3 = 16;    //熄灭
+  34   2          smg4 = FRE / 10000;
+  35   2          smg5 = (FRE % 10000) / 1000;
+  36   2          smg6 = (FRE % 1000) / 100;
+  37   2          smg7 = (FRE % 100) / 10;
+  38   2          smg8 = FRE % 10;
+  39   2        
+  40   2          //消0
+  41   2          if(smg4 == 0)
+  42   2          {
+  43   3            smg4 = 16;
+  44   3            if(smg5 == 0)
+  45   3            {
+  46   4              smg5 = 16;
+  47   4              if(smg6 == 0)
+  48   4              {
+  49   5                smg6 = 16;
+  50   5                if(smg7 == 0)
+  51   5                {
+  52   6                  smg7 = 16;
+  53   6                }
+  54   5              }
+C51 COMPILER V9.59.0.0   DISPLAY                                                           03/29/2019 21:34:57 PAGE 2   
+
+  55   4            }
+  56   3          }
+  57   2        }
+  58   1        //如果是测电压模式
+  59   1        else if(mode == 2)
+  60   1        {
+  61   2          smg1 = 18;          //显示U
+  62   2          smg2 = smg3 = smg4 = smg5 = 16;  //熄灭
+  63   2          smg6 = VAL / 100;
+  64   2          smg7 = (VAL % 100) / 10;
+  65   2          smg8 = VAL % 10;
+  66   2        }
+  67   1      
+  68   1        //如果关闭数码管时全部熄灭
+  69   1        if(flagtube == 0)
+  70   1          smg1 = smg2 = smg3 = smg4 = smg5 = smg6 = smg7 = smg8 = 16;
+  71   1      
+  72   1        if((mode == 2) && (flagtube == 1))
+  73   1          TubeBuff[5] = table[smg6] & 0x7f;   //测电压时加上小数点
+  74   1        else
+  75   1            TubeBuff[5] = table[smg6];    
+  76   1        TubeBuff[0] = table[smg1];
+  77   1        TubeBuff[1] = table[smg2];
+  78   1        TubeBuff[2] = table[smg3];
+  79   1        TubeBuff[3] = table[smg4];
+  80   1        TubeBuff[4] = table[smg5];
+  81   1        TubeBuff[6] = table[smg7];
+  82   1        TubeBuff[7] = table[smg8];
+  83   1      }
+  84          
+  85          void LedLight(void)
+  86          {
+  87   1        P0 = 0xff;
+  88   1        P2 = (P2 & 0x1f) | 0x80;
+  89   1        P0 = led;     
+  90   1        P2 = P2 & 0x1f;
+  91   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    397    ----
+   CONSTANT SIZE    =     19    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     17    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,90 @@
+C51 COMPILER V9.59.0.0   MAIN                                                              01/10/2020 22:24:53 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN ..\OBJ\main.obj
+COMPILER INVOKED BY: F:\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\INC) DEBUG OBJECTEXTEND PRINT(
+                    -..\OBJ\main.lst) TABS(2) OBJECT(..\OBJ\main.obj)
+
+line level    source
+
+   1          #include <stc15.h>
+   2          #include "sys.h"
+   3          
+   4          bit flag_125ms = 0, flag_200ms = 0, flag_500ms = 0, flag_1s = 0;
+   5          u8 mode = 2;
+   6          u16 Temper_int = 0, Temper_dec = 0;
+   7          u16 distance = 0;
+   8          
+   9          void main(void)
+  10          { 
+  11   1        u16 t;
+  12   1        
+  13   1        AllInit();
+  14   1        init_ds18b20();
+  15   1        Trans_temper();
+  16   1      //  Timer0Init();
+  17   1        Timer1Init();
+  18   1        
+  19   1        EA = 1;
+  20   1        
+  21   1        while(1)
+  22   1        {
+  23   2          //温度测量程序
+  24   2          if(flag_1s)
+  25   2          {
+  26   3            flag_1s = 0;
+  27   3            Temper_int = Gettemper();
+  28   3            Temper_dec = Temper_int & 0xf;    //分离小数部分
+  29   3            Temper_dec = Temper_dec * ((10000 / 16) / 100);
+  30   3            Temper_int = Temper_int >> 4;     //分离整数部分
+  31   3            
+  32   3            Trans_temper();               //启动下一次温度转换
+  33   3          }
+  34   2          
+  35   2          //超声波测距
+  36   2          if(mode == 2)
+  37   2          {
+  38   3            if(flag_125ms)
+  39   3            {
+  40   4              flag_125ms = 0;
+  41   4              SendSonic();      //发送50KHz的超声波 
+  42   4              TR1 = 1;          //开启定时器1计时
+  43   4              while((RX == 1) && (TF1 == 0)); //如果接收到回波或者定时器1溢出
+  44   4              TR1 = 0;          //关闭定时器1
+  45   4              if(TF1 == 1)
+  46   4              {
+  47   5                TF1 = 0;
+  48   5                distance = 999; //距离999
+  49   5              }
+  50   4              else
+  51   4              {
+  52   5                t = TH1;
+  53   5                t <<= 8;
+  54   5                t |= TL1;
+C51 COMPILER V9.59.0.0   MAIN                                                              01/10/2020 22:24:53 PAGE 2   
+
+  55   5                distance = (u16)(t * 0.017);
+  56   5              }
+  57   4              TH1 = 0;
+  58   4              TL1 = 0;
+  59   4            }
+  60   3          }
+  61   2          
+  62   2          KeyPress();
+  63   2        }
+  64   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    150    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      7    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      4    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

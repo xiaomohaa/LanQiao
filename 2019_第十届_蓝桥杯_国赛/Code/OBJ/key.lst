@@ -1,0 +1,114 @@
+C51 COMPILER V9.59.0.0   KEY                                                               01/10/2020 22:24:54 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE KEY
+OBJECT MODULE PLACED IN ..\OBJ\key.obj
+COMPILER INVOKED BY: F:\Keil_v5\C51\BIN\C51.EXE ..\HARDWARE\key.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\INC) DEBUG OBJECTEX
+                    -TEND PRINT(..\OBJ\key.lst) TABS(2) OBJECT(..\OBJ\key.obj)
+
+line level    source
+
+   1          #include "sys.h"
+   2          
+   3          sbit KeyOut1 = P4^4;
+   4          sbit KeyOut2 = P4^2;
+   5          sbit KeyOut3 = P3^5;
+   6          sbit KeyOut4 = P3^4;
+   7          sbit KeyIn1 = P3^0;
+   8          sbit KeyIn2 = P3^1;
+   9          sbit KeyIn3 = P3^2;
+  10          sbit KeyIn4 = P3^3;
+  11          
+  12          unsigned char code KeyMap[4][4] = {{1, 2, 3, 4}, 
+  13                                             {5, 6, 7, 8}, 
+  14                                             {9, 10, 11, 12}, 
+  15                                             {13, 14, 15, 16}};
+  16          unsigned char KeyBuff[4][4] = {{0xff, 0xff, 0xff, 0xff},
+  17                                         {0xff, 0xff, 0xff, 0xff}, 
+  18                                         {0xff, 0xff, 0xff, 0xff}, 
+  19                                         {0xff, 0xff, 0xff, 0xff}};
+  20          unsigned char KeySta[4][4] = {{1,1,1,1},{1,1,1,1},{1,1,1,1},{1,1,1,1}};
+  21          unsigned char KeyBackup[4][4] = {{1,1,1,1}, {1,1,1,1}, {1,1,1,1}, {1,1,1,1}};
+  22            
+  23          void KeyScan(void)
+  24          {
+  25   1        static u8 index = 0;
+  26   1        u8 i;
+  27   1        
+  28   1        //获取当前键值
+  29   1        KeyBuff[0][index] = (KeyBuff[0][index] << 1) | KeyIn1;
+  30   1        KeyBuff[1][index] = (KeyBuff[1][index] << 1) | KeyIn2;
+  31   1        KeyBuff[2][index] = (KeyBuff[2][index] << 1) | KeyIn3;
+  32   1        KeyBuff[3][index] = (KeyBuff[3][index] << 1) | KeyIn4;
+  33   1      
+  34   1        for(i = 0; i < 4; i ++)
+  35   1        {
+  36   2          if((KeyBuff[i][index] & 0x0f) == 0x00)
+  37   2            KeySta[i][index] = 0;
+  38   2          else if((KeyBuff[i][index] & 0x0f) == 0x0f)
+  39   2            KeySta[i][index] = 1;
+  40   2          else
+  41   2          {
+  42   3          }
+  43   2        }
+  44   1        
+  45   1        index ++;
+  46   1        index &= 0x03;
+  47   1        switch(index)
+  48   1        {
+  49   2          case 0: KeyOut1 = 0; KeyOut4 = 1; break;
+  50   2          case 1: KeyOut2 = 0; KeyOut1 = 1; break;
+  51   2          case 2: KeyOut3 = 0; KeyOut2 = 1; break;
+  52   2          case 3: KeyOut4 = 0; KeyOut3 = 1; break;
+  53   2        }
+  54   1      }
+C51 COMPILER V9.59.0.0   KEY                                                               01/10/2020 22:24:54 PAGE 2   
+
+  55          
+  56          void KeyPress(void)
+  57          {
+  58   1        u8 i, j;
+  59   1        
+  60   1        for(i = 0; i < 4; i ++)
+  61   1        {
+  62   2          for(j = 0; j < 4; j ++)
+  63   2          {
+  64   3            if(KeyBackup[i][j] != KeySta[i][j])
+  65   3            {
+  66   4              if(KeySta[i][j] == 0)        //按键按下时操作
+  67   4                KeyAction(KeyMap[i][j]);
+  68   4              KeyBackup[i][j] = KeySta[i][j];
+  69   4            }
+  70   3          }
+  71   2        }
+  72   1      }
+  73          
+  74          void KeyAction(u8 keycode)
+  75          {
+  76   1        keycode = 1;
+  77   1      }
+  78          
+  79          
+  80          
+  81          
+  82          
+  83          
+  84          
+  85          
+  86          
+  87          
+  88          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    320    ----
+   CONSTANT SIZE    =     16    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     49       2
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,46 @@
+C51 COMPILER V9.59.0.0   SONIC                                                             01/10/2020 22:24:54 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE SONIC
+OBJECT MODULE PLACED IN ..\OBJ\sonic.obj
+COMPILER INVOKED BY: F:\Keil_v5\C51\BIN\C51.EXE ..\HARDWARE\sonic.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\INC) DEBUG OBJECT
+                    -EXTEND PRINT(..\OBJ\sonic.lst) TABS(2) OBJECT(..\OBJ\sonic.obj)
+
+line level    source
+
+   1          #include "sys.h"
+   2          
+   3          #define sonic_nop {_nop_(); _nop_(); _nop_(); _nop_(); _nop_(); _nop_(); _nop_(); _nop_(); _nop_(); _nop_(
+             -);};
+   4          
+   5          void SendSonic(void)
+   6          {
+   7   1        unsigned char i = 8;
+   8   1        
+   9   1        while(i --)
+  10   1        {
+  11   2          TX = 1;
+  12   2          sonic_nop; sonic_nop; sonic_nop; sonic_nop; sonic_nop;
+  13   2          sonic_nop; sonic_nop; sonic_nop; sonic_nop; sonic_nop;
+  14   2          TX = 0;
+  15   2          sonic_nop; sonic_nop; sonic_nop; sonic_nop; sonic_nop;
+  16   2          sonic_nop; sonic_nop; sonic_nop; sonic_nop; sonic_nop;
+  17   2        }
+  18   1      }
+  19          
+  20          
+  21          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    219    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

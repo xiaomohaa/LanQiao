@@ -1,0 +1,158 @@
+C51 COMPILER V9.59.0.0   DISPLAY                                                           05/17/2019 08:03:40 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE DISPLAY
+OBJECT MODULE PLACED IN ..\OBJ\display.obj
+COMPILER INVOKED BY: F:\Keil_v5\C51\BIN\C51.EXE ..\HARDWARE\display.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(..\INC) DEBU
+                    -G OBJECTEXTEND PRINT(..\OBJ\display.lst) TABS(2) OBJECT(..\OBJ\display.obj)
+
+line level    source
+
+   1          #include "sys.h"
+   2          
+   3          unsigned char code table[]={0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xf8, 
+   4                                      0x80, 0x90, 0x88, 0x83, 0xc6, 0xa1, 0x86, 0x8e,
+   5                                      0xff, 0xbf, 0xc1, 0x89, 0x8c};  //18-U 19-H 20-P
+   6          unsigned char TubeBuff[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+   7          unsigned char smg1, smg2, smg3, smg4, smg5, smg6, smg7, smg8;
+   8          
+   9          void TubeScan(void)
+  10          {
+  11   1        static u8 index = 0;
+  12   1        
+  13   1        P0 = 0xff;
+  14   1        P2 = (P2 & 0x1f) | 0xe0;
+  15   1        P0 = 0xff;
+  16   1        P2 = P2 & 0x1f;
+  17   1        
+  18   1        P0 = 0x00;
+  19   1        P2 = (P2 & 0x1f) | 0xc0;
+  20   1        P0 = 0x01 << index;
+  21   1        P2 = P2 & 0x1f;
+  22   1        
+  23   1        P0 = 0xff;
+  24   1        P2 = (P2 & 0x1f) | 0xe0;
+  25   1        P0 = TubeBuff[index];
+  26   1        P2 = P2 & 0x1f;
+  27   1        
+  28   1        index ++;
+  29   1        index &= 0x07;
+  30   1      }
+  31          
+  32          void TubeShow(void)
+  33          {
+  34   1        //时钟显示程序
+  35   1        if(mode == 1)
+  36   1        {
+  37   2          smg1 = hour >> 4;
+  38   2          smg2 = hour & 0x0f;
+  39   2          smg4 = min >> 4;
+  40   2          smg5 = min & 0x0f;
+  41   2          smg7 = sec >> 4;
+  42   2          smg8 = sec & 0x0f;
+  43   2          
+  44   2          if(smg8 % 2 == 0)
+  45   2            smg3 = smg6 = 16;
+  46   2          else
+  47   2            smg3 = smg6 = 17;
+  48   2        }
+  49   1        
+  50   1        //输入密码界面
+  51   1        else if(mode == 2)
+  52   1        {
+  53   2          smg1 = smg2 = 17;
+  54   2          smg3 = Keyword_in[0];
+C51 COMPILER V9.59.0.0   DISPLAY                                                           05/17/2019 08:03:40 PAGE 2   
+
+  55   2          smg4 = Keyword_in[1];
+  56   2          smg5 = Keyword_in[2];
+  57   2          smg6 = Keyword_in[3];
+  58   2          smg7 = Keyword_in[4];
+  59   2          smg8 = Keyword_in[5];
+  60   2          
+  61   2        }
+  62   1        
+  63   1        //设置界面
+  64   1        else if(mode == 3)
+  65   1        {
+  66   2          smg1 = 16;
+  67   2          smg2 = 17;
+  68   2          smg3 = Keyword_set[0];
+  69   2          smg4 = Keyword_set[1];
+  70   2          smg5 = Keyword_set[2];
+  71   2          smg6 = Keyword_set[3];
+  72   2          smg7 = Keyword_set[4];
+  73   2          smg8 = Keyword_set[5];
+  74   2        }
+  75   1        
+  76   1        else if(mode == 4)
+  77   1        {
+  78   2          smg1 = 17;
+  79   2          smg2 = 16;
+  80   2          smg3 = Keyword_set[0];
+  81   2          smg4 = Keyword_set[1];
+  82   2          smg5 = Keyword_set[2];
+  83   2          smg6 = Keyword_set[3];
+  84   2          smg7 = Keyword_set[4];
+  85   2          smg8 = Keyword_set[5];
+  86   2        }
+  87   1        
+  88   1        //测试用
+  89   1      //  else if(mode == 5)
+  90   1      //  {
+  91   1      //    smg1 = smg2 = smg3 = smg4 = smg5 = 16;
+  92   1      //    smg6 = distance / 100;
+  93   1      //    smg7 = (distance % 100) / 10;
+  94   1      //    smg8 = distance % 10;
+  95   1      //  
+  96   1      //    if(smg6 == 0)
+  97   1      //    {
+  98   1      //      smg6 = 16;
+  99   1      //      if(smg7 == 0)
+ 100   1      //        smg7 = 16;
+ 101   1      //    }
+ 102   1      //  }
+ 103   1        
+ 104   1        TubeBuff[0] = table[smg1];
+ 105   1        TubeBuff[1] = table[smg2];
+ 106   1        TubeBuff[2] = table[smg3];
+ 107   1        TubeBuff[3] = table[smg4];
+ 108   1        TubeBuff[4] = table[smg5];
+ 109   1        TubeBuff[5] = table[smg6];
+ 110   1        TubeBuff[6] = table[smg7];
+ 111   1        TubeBuff[7] = table[smg8];
+ 112   1      }
+ 113          
+ 114          void BeepWork(bit dat)
+ 115          {
+ 116   1        P06 = 0;
+C51 COMPILER V9.59.0.0   DISPLAY                                                           05/17/2019 08:03:40 PAGE 3   
+
+ 117   1        P2 = (P2 & 0x1f) | 0xa0;
+ 118   1        P06 = dat;
+ 119   1        P2 = P2 & 0x1f;
+ 120   1      }
+ 121          
+ 122          void RelayWork(bit dat)
+ 123          {
+ 124   1        P04 = 0;
+ 125   1        P2 = (P2 & 0x1f) | 0xa0;
+ 126   1        P04 = dat;
+ 127   1        P2 = P2 & 0x1f;
+ 128   1      }
+ 129          
+ 130          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    491    ----
+   CONSTANT SIZE    =     21    ----
+   XDATA SIZE       =     17    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       2
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

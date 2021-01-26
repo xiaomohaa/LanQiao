@@ -1,0 +1,187 @@
+C51 COMPILER V9.59.0.0   KEY                                                               05/10/2019 00:57:55 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE KEY
+OBJECT MODULE PLACED IN ..\OBJ\key.obj
+COMPILER INVOKED BY: F:\Keil_v5\C51\BIN\C51.EXE ..\HARDWARE\key.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(..\INC) DEBUG OB
+                    -JECTEXTEND PRINT(..\OBJ\key.lst) TABS(2) OBJECT(..\OBJ\key.obj)
+
+line level    source
+
+   1          #include "sys.h"
+   2          
+   3          sbit KeyOut1 = P4^4;
+   4          sbit KeyOut2 = P4^2;
+   5          sbit KeyOut3 = P3^5;
+   6          sbit KeyOut4 = P3^4;
+   7          sbit KeyIn1 = P3^0;
+   8          sbit KeyIn2 = P3^1;
+   9          sbit KeyIn3 = P3^2;
+  10          sbit KeyIn4 = P3^3;
+  11          
+  12          unsigned char code KeyMap[4][4] = {{1, 2, 3, 4}, 
+  13                                             {5, 6, 7, 8}, 
+  14                                             {9, 10, 11, 12}, 
+  15                                             {13, 14, 15, 16}};
+  16          unsigned char KeyBuff[4][4] = {{0xff, 0xff, 0xff, 0xff},
+  17                                         {0xff, 0xff, 0xff, 0xff}, 
+  18                                         {0xff, 0xff, 0xff, 0xff}, 
+  19                                         {0xff, 0xff, 0xff, 0xff}};
+  20          unsigned char KeySta[4][4] = {{1,1,1,1},{1,1,1,1},{1,1,1,1},{1,1,1,1}};
+  21          unsigned char KeyBackup[4][4] = {{1,1,1,1}, {1,1,1,1}, {1,1,1,1}, {1,1,1,1}};
+  22            
+  23          void KeyScan(void)
+  24          {
+  25   1        static u8 index = 0;
+  26   1        u8 i;
+  27   1        
+  28   1        //获取当前键值
+  29   1        KeyBuff[0][index] = (KeyBuff[0][index] << 1) | KeyIn1;
+  30   1        KeyBuff[1][index] = (KeyBuff[1][index] << 1) | KeyIn2;
+  31   1        KeyBuff[2][index] = (KeyBuff[2][index] << 1) | KeyIn3;
+  32   1        KeyBuff[3][index] = (KeyBuff[3][index] << 1) | KeyIn4;
+  33   1      
+  34   1        for(i = 0; i < 4; i ++)
+  35   1        {
+  36   2          if((KeyBuff[i][index] & 0x0f) == 0x00)
+  37   2            KeySta[i][index] = 0;
+  38   2          else if((KeyBuff[i][index] & 0x0f) == 0x0f)
+  39   2            KeySta[i][index] = 1;
+  40   2          else
+  41   2          {
+  42   3            //当S6按下后，一旦发生按键松动，则不是长按键状态
+  43   3            if(flag_S6_Press)
+  44   3              flag_S6_Press = 0;
+  45   3          }
+  46   2        }
+  47   1        
+  48   1        index ++;
+  49   1        index &= 0x03;
+  50   1        switch(index)
+  51   1        {
+  52   2          case 0: KeyOut1 = 0; KeyOut4 = 1; break;
+  53   2          case 1: KeyOut2 = 0; KeyOut1 = 1; break;
+  54   2          case 2: KeyOut3 = 0; KeyOut2 = 1; break;
+C51 COMPILER V9.59.0.0   KEY                                                               05/10/2019 00:57:55 PAGE 2   
+
+  55   2          case 3: KeyOut4 = 0; KeyOut3 = 1; break;
+  56   2        }
+  57   1      }
+  58          
+  59          void KeyPress(void)
+  60          {
+  61   1        u8 i, j;
+  62   1        
+  63   1        for(i = 0; i < 4; i ++)
+  64   1        {
+  65   2          for(j = 0; j < 4; j ++)
+  66   2          {
+  67   3            if(KeyBackup[i][j] != KeySta[i][j])
+  68   3            {
+  69   4              if(KeySta[i][j] == 0)        //按键按下时操作
+  70   4                KeyAction(KeyMap[i][j]);
+  71   4              KeyBackup[i][j] = KeySta[i][j];
+  72   4            }
+  73   3          }
+  74   2        }
+  75   1      }
+  76          
+  77          void KeyAction(u8 keycode)
+  78          {
+  79   1        static u8 mode_backup;
+  80   1        
+  81   1        if(keycode == 13)   //S4 切换显示
+  82   1        {
+  83   2          mode ++;
+  84   2          if(!flag_HShow)   //关闭回显模式
+  85   2          {
+  86   3            if(mode == 4)
+  87   3              mode = 1;
+  88   3          }
+  89   2          else
+  90   2          {
+  91   3            if(mode == 8)
+  92   3              mode = 5;
+  93   3          }
+  94   2        }
+  95   1        else if(keycode == 9)   //S5 备份数据存储数据
+  96   1        {
+  97   2          if((!flag_HShow) && (mode != 4))
+  98   2          {
+  99   3            if(!flag_keep)
+ 100   3            {
+ 101   4              //备份当前数据
+ 102   4              H_Fre = Fre;
+ 103   4              H_Temper_int = Temper_int;
+ 104   4              H_Temper_dec = Temper_dec;
+ 105   4              H_Vol = Vol;
+ 106   4              flag_keep = 1;
+ 107   4            }
+ 108   3          }
+ 109   2        }
+ 110   1        
+ 111   1        else if(keycode == 5)   //S6 回显/阈值+
+ 112   1        {
+ 113   2          if(mode != 4)       //非设置界面
+ 114   2          {
+ 115   3            if(flag_HShow)    //关闭回显模式
+ 116   3            {
+C51 COMPILER V9.59.0.0   KEY                                                               05/10/2019 00:57:55 PAGE 3   
+
+ 117   4              flag_HShow = 0;
+ 118   4              mode = mode_backup;
+ 119   4            }
+ 120   3            else
+ 121   3            {
+ 122   4              flag_HShow = 1;
+ 123   4              mode_backup = mode;
+ 124   4              mode = 5;
+ 125   4            }
+ 126   3          }
+ 127   2          else if(mode == 4)    //设置界面
+ 128   2          {
+ 129   3            VTH += 1;
+ 130   3            flag_S6_Press = 1;
+ 131   3            if(VTH > 50)
+ 132   3              VTH = 1;
+ 133   3          }
+ 134   2        }
+ 135   1        
+ 136   1        else if(keycode == 1) //S7
+ 137   1        {
+ 138   2          if(mode != 4)       //在非设置界面按下
+ 139   2          {
+ 140   3            mode_backup = mode;
+ 141   3            mode = 4;
+ 142   3          }
+ 143   2          else if(mode == 4)  //在设置界面按下
+ 144   2          {
+ 145   3            mode = mode_backup;
+ 146   3          }
+ 147   2        }
+ 148   1      }
+ 149          
+ 150          
+ 151          
+ 152          
+ 153          
+ 154          
+ 155          
+ 156          
+ 157          
+ 158          
+ 159          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    764    ----
+   CONSTANT SIZE    =     16    ----
+   XDATA SIZE       =     50       2
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

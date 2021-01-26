@@ -1,0 +1,125 @@
+C51 COMPILER V9.59.0.0   MAIN                                                              05/17/2019 08:03:41 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN ..\OBJ\main.obj
+COMPILER INVOKED BY: F:\Keil_v5\C51\BIN\C51.EXE main.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(..\INC) DEBUG OBJECTEXTEND 
+                    -PRINT(..\OBJ\main.lst) TABS(2) OBJECT(..\OBJ\main.obj)
+
+line level    source
+
+   1          #include <stc15.h>
+   2          #include "sys.h"
+   3          
+   4          u8 mode = 1;
+   5          bit flag_100ms = 0, flag_5s = 0, flag_3s = 0, flag_5ms = 0, flag_125ms = 0;
+   6          u8 hour = 0x06, min = 0x59, sec = 0x00;
+   7          u8 Keyword[] = {6, 5, 4, 3, 2, 1};
+   8          u8 Keyword_in[] = {16, 16, 16, 16, 16, 16};
+   9          u8 Keyword_set[] = {16, 16, 16, 16, 16, 16};
+  10          bit result = 0;
+  11          bit flag_beep = 0, flag_relay = 0;
+  12          u8 error_times = 0;
+  13          bit flag_write = 0;
+  14          u16 distance = 100;
+  15          
+  16          void main(void)
+  17          {
+  18   1        u8 index = 1;
+  19   1        u16 t;
+  20   1        
+  21   1        AllInit();
+  22   1        Check_data();
+  23   1        DS1302Init();
+  24   1        Timer0Init();
+  25   1        Timer1Init();
+  26   1        EA = 1;
+  27   1        while(1)
+  28   1        {
+  29   2          if(flag_100ms)
+  30   2          {
+  31   3            flag_100ms = 0;
+  32   3            
+  33   3            //读取DS1302时间
+  34   3            hour = Read_Ds1302(0x85);
+  35   3            min  = Read_Ds1302(0x83);
+  36   3            sec  = Read_Ds1302(0x81);
+  37   3          }
+  38   2                
+  39   2          if(mode == 1 || mode == 2)
+  40   2          {
+  41   3            if(hour < 0x07 || hour > 0x21)
+  42   3              mode = 2;
+  43   3            else
+  44   3              mode = 1;
+  45   3          }
+  46   2          
+  47   2          //写E2PROM
+  48   2          if(flag_write)
+  49   2          {
+  50   3            if(flag_5ms)
+  51   3            {
+  52   4              flag_5ms = 0;
+  53   4              switch(index)
+  54   4              {
+C51 COMPILER V9.59.0.0   MAIN                                                              05/17/2019 08:03:41 PAGE 2   
+
+  55   5                case 1: Write_E2PROM(0x00, 0x18); break;
+  56   5                case 2: Write_E2PROM(0x01, Keyword[0]); break;
+  57   5                case 3: Write_E2PROM(0x02, Keyword[1]); break;
+  58   5                case 4: Write_E2PROM(0x03, Keyword[2]); break;
+  59   5                case 5: Write_E2PROM(0x04, Keyword[3]); break;
+  60   5                case 6: Write_E2PROM(0x05, Keyword[4]); break;
+  61   5                case 7: Write_E2PROM(0x06, Keyword[5]); flag_write = 0; index = 1; break;
+  62   5              }
+  63   4              index ++;
+  64   4            }
+  65   3          }
+  66   2          
+  67   2          //超声波
+  68   2          if(flag_125ms)
+  69   2          {
+  70   3            flag_125ms = 0;
+  71   3            SendSonic();      //发送50KHz的超声波 
+  72   3            TR1 = 1;          //开启定时器1计时
+  73   3            while((RX == 1) && (TF1 == 0)); //如果接收到回波或者定时器1溢出
+  74   3            TR1 = 0;          //关闭定时器1
+  75   3            if(TF1 == 1)
+  76   3            {
+  77   4              TF1 = 0;
+  78   4              distance = 999; //距离999
+  79   4            }
+  80   3            else
+  81   3            {
+  82   4              t = TH1;
+  83   4              t <<= 8;
+  84   4              t |= TL1;
+  85   4              distance = (u16)(t * 0.017);
+  86   4            }
+  87   3            TH1 = 0;
+  88   3            TL1 = 0;
+  89   3          }
+  90   2          
+  91   2          if(mode == 1)
+  92   2          {
+  93   3            if(distance < 31)
+  94   3              flag_relay = 1;
+  95   3          }
+  96   2          
+  97   2          KeyPress();
+  98   2        }
+  99   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    356    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     25       1
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      9    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

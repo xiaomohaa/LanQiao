@@ -1,0 +1,7 @@
+".\Objects\display.obj",
+".\Objects\iic.obj",
+".\Objects\key.obj",
+".\Objects\main.obj",
+".\Objects\sys.obj" 
+TO ".\Objects\lanqiaobei" 
+PRINT(".\Listings\lanqiaobei.m51") RAMSIZE(256) 
