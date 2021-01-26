@@ -1,0 +1,7 @@
+"..\OBJ\display.obj",
+"..\OBJ\key.obj",
+"..\OBJ\iic.obj",
+"..\OBJ\sys.obj",
+"..\OBJ\main.obj" 
+TO "..\OBJ\light_control" 
+PRINT("..\OBJ\light_control.m51") RAMSIZE(256) 

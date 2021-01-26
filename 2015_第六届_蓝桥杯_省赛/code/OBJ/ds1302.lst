@@ -1,0 +1,160 @@
+C51 COMPILER V9.59.0.0   DS1302                                                            03/07/2019 14:15:36 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE DS1302
+OBJECT MODULE PLACED IN ..\OBJ\ds1302.obj
+COMPILER INVOKED BY: F:\Keil_v5\C51\BIN\C51.EXE ..\HARDWARE\ds1302.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\INC) DEBUG OBJEC
+                    -TEXTEND PRINT(..\OBJ\ds1302.lst) TABS(2) OBJECT(..\OBJ\ds1302.obj)
+
+line level    source
+
+   1          #include "sys.h"
+   2          
+   3          sbit DS1302_IO = P2^3;
+   4          sbit DS1302_CK = P1^7;
+   5          sbit DS1302_CE = P1^3;
+   6          
+   7          void DS1302ByteWrite(unsigned char dat) 
+   8          {
+   9   1        unsigned char mask;
+  10   1        DS1302_IO = 1;          //拉低IO总线
+  11   1        for(mask = 0x01; mask != 0; mask <<= 1) //低位在前，逐位移出
+  12   1        {
+  13   2          if((dat&mask) != 0)   //首先输出该位数据
+  14   2            DS1302_IO = 1;
+  15   2          else
+  16   2            DS1302_IO = 0;
+  17   2          DS1302_CK = 1;        //拉高时钟线
+  18   2          DS1302_CK = 0;        //拉低时钟线，完成一个位的操作
+  19   2        }
+  20   1        DS1302_IO = 1;          //写完之后确保释放IO总线
+  21   1      }  
+  22          
+  23          unsigned char DS1302ByteRead(void)
+  24          {
+  25   1        unsigned char mask, dat = 0;
+  26   1        
+  27   1        for(mask = 0x01; mask != 0; mask <<= 1) //低位在前，逐位读取
+  28   1        {
+  29   2          if(DS1302_IO)     //首先读取此时的IO引脚，并设置dat中的对应位
+  30   2            dat |= mask;
+  31   2      
+  32   2          DS1302_CK = 1;    //拉高时钟
+  33   2          DS1302_CK = 0;    //再拉低时钟，完成一个位的操作
+  34   2        }
+  35   1        return dat;         //返回读到的字节数据
+  36   1      } 
+  37          
+  38          void DS1302SingleWrite(unsigned char reg, unsigned char dat)     
+  39          {
+  40   1        DS1302_CE = 1;          //使能片选信号
+  41   1        DS1302ByteWrite((reg << 1) | 0x80); //发送写寄存器指令
+  42   1        DS1302ByteWrite(dat);   //写入字节数据
+  43   1        DS1302_CE = 0;          //除能片选信号
+  44   1      }
+  45          
+  46          unsigned char DS1302SingleRead(unsigned char reg)
+  47          {
+  48   1        unsigned char dat;
+  49   1        
+  50   1        DS1302_CE = 1;          //使能片选信号
+  51   1        DS1302ByteWrite((reg << 1) | 0x81); //发送读寄存器指令
+  52   1        dat = DS1302ByteRead(); //读取字节数据
+  53   1        DS1302_CE = 0;          //除能片选信号
+  54   1        
+C51 COMPILER V9.59.0.0   DS1302                                                            03/07/2019 14:15:36 PAGE 2   
+
+  55   1        DS1302_IO = 0;          //单字节读必须加的！
+  56   1        
+  57   1        return dat;         
+  58   1      }
+  59          
+  60          void DS1302BurstWrite(unsigned char *dat)
+  61          {
+  62   1        unsigned char i;
+  63   1        
+  64   1        DS1302_CE = 1;
+  65   1        DS1302ByteWrite(0xBE);        //发送突发写寄存器指令
+  66   1        for(i = 0; i < 7; i ++)       //连续写入8字节数据
+  67   1          DS1302ByteWrite(*dat++);        
+  68   1        DS1302_CE = 0;      
+  69   1      }
+  70          
+  71          void DS1302BurstRead (unsigned char *dat)
+  72          {
+  73   1        unsigned char i;
+  74   1        
+  75   1        DS1302_CE = 1;
+  76   1        DS1302ByteWrite(0xBF);        //发送突发读寄存器指令
+  77   1        for(i = 0; i < 7; i++)        //连续读取8个字节
+  78   1          dat[i] = DS1302ByteRead();      
+  79   1        DS1302_CE = 0;  
+  80   1        
+  81   1        DS1302_IO = 0;                //突发读必须加
+  82   1      } 
+  83          
+  84          void GetRealTime(unsigned char *time)
+  85          {
+  86   1        unsigned char buf[8];
+  87   1        
+  88   1        DS1302BurstRead(buf);
+  89   1        time[0] = buf[6];
+  90   1        time[1] = buf[4];
+  91   1        time[2] = buf[3];
+  92   1        time[3] = buf[2];
+  93   1        time[4] = buf[1];
+  94   1        time[5] = buf[0];
+  95   1        time[6] = buf[5];
+  96   1      }
+  97          
+  98          void SetRealTime(unsigned char *time)
+  99          {
+ 100   1        unsigned char buf[8];
+ 101   1        
+ 102   1        buf[7] = 0;
+ 103   1        buf[6] = time[0];
+ 104   1        buf[4] = time[1];
+ 105   1        buf[3] = time[2];
+ 106   1        buf[2] = time[3];
+ 107   1        buf[1] = time[4];
+ 108   1        buf[0] = time[5];
+ 109   1        buf[5] = time[6];
+ 110   1        DS1302BurstWrite(buf);
+ 111   1      }
+ 112          
+ 113          void InitDS1302(unsigned char *time)
+ 114          {
+ 115   1        unsigned char dat;
+ 116   1        signed char i = 7;
+C51 COMPILER V9.59.0.0   DS1302                                                            03/07/2019 14:15:36 PAGE 3   
+
+ 117   1        unsigned char timeinit[8];
+ 118   1        
+ 119   1        while(i >= 0)
+ 120   1        {
+ 121   2          timeinit[i] = time[i];
+ 122   2          i --;
+ 123   2        }
+ 124   1        
+ 125   1        DS1302_CE = 0;                //初始化DS1302通信引脚
+ 126   1        DS1302_CK = 0;
+ 127   1        dat = DS1302SingleRead(0);      //读取秒寄存器
+ 128   1        DS1302SingleWrite(7, 0x00);   //撤销写保护以允许写入数据
+ 129   1        SetRealTime(&timeinit);         //设置DS1302时间
+ 130   1      //  DS1302SingleWrite(7, 0x80);   //写保护以禁止写入数据
+ 131   1      }
+ 132          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    412    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----      37
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

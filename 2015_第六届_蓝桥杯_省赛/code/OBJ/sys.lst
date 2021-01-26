@@ -1,0 +1,86 @@
+C51 COMPILER V9.59.0.0   SYS                                                               03/07/2019 14:15:36 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE SYS
+OBJECT MODULE PLACED IN ..\OBJ\sys.obj
+COMPILER INVOKED BY: F:\Keil_v5\C51\BIN\C51.EXE ..\SYSTEM\sys.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\INC) DEBUG OBJECTEXTE
+                    -ND PRINT(..\OBJ\sys.lst) TABS(2) OBJECT(..\OBJ\sys.obj)
+
+line level    source
+
+   1          #include "sys.h"
+   2          
+   3          void AllInit(void)
+   4          {
+   5   1        P2 = (P2 & 0x1f) | 0x80;
+   6   1        P0 = 0xff;
+   7   1        P2 = (P2 & 0x1f) | 0xc0;
+   8   1        P0 = 0x00;
+   9   1        P2 = (P2 & 0x1f) | 0xa0;
+  10   1        P0 = 0x00;
+  11   1        P2 = P2 & 0x1f;
+  12   1      }
+  13          
+  14          
+  15          void Timer0Init(void)   //2毫秒@11.0592MHz
+  16          {
+  17   1        AUXR |= 0x80;   //定时器时钟1T模式
+  18   1        TMOD &= 0xF0;   //设置定时器模式
+  19   1        TL0 = 0x9A;   //设置定时初值
+  20   1        TH0 = 0xA9;   //设置定时初值
+  21   1        TF0 = 0;    //清除TF0标志
+  22   1        TR0 = 1;    //定时器0开始计时
+  23   1        ET0 = 1;
+  24   1      }
+  25          
+  26          void Timer0(void) interrupt 1
+  27          {
+  28   1        static u8 T0count1 = 0;
+  29   1        static u16 T0count2 = 0;
+  30   1        u16 time_temp = 0;
+  31   1        
+  32   1        T0count1 ++;
+  33   1        T0count2 ++;
+  34   1        time_temp = Temper_time * 500;
+  35   1        
+  36   1        if(T0count1 >= 25)
+  37   1        {
+  38   2          T0count1 = 0;
+  39   2          flag_50ms = 1;
+  40   2        }
+  41   1        
+  42   1        if(flag_start)
+  43   1        {
+  44   2          if(T0count2 >= time_temp)
+  45   2          {
+  46   3            T0count2 = 0;
+  47   3            flag_temper = 1;
+  48   3          }
+  49   2        }
+  50   1        else
+  51   1        {
+  52   2          T0count2 = 0;
+  53   2          flag_temper = 0;
+  54   2        }
+C51 COMPILER V9.59.0.0   SYS                                                               03/07/2019 14:15:36 PAGE 2   
+
+  55   1      
+  56   1        KeyScan();
+  57   1        TubeShow();
+  58   1        TubeScan();
+  59   1      }
+  60          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    189    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      3    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

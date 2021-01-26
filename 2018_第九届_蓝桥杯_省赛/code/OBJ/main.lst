@@ -1,0 +1,80 @@
+C51 COMPILER V9.59.0.0   MAIN                                                              07/26/2020 16:29:52 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN ..\OBJ\main.obj
+COMPILER INVOKED BY: F:\Keil_v5\C51\BIN\C51.EXE main.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(..\INC) DEBUG OBJECTEXTEND 
+                    -PRINT(..\OBJ\main.lst) TABS(2) OBJECT(..\OBJ\main.obj)
+
+line level    source
+
+   1          #include <stc15.h>
+   2          #include "sys.h"
+   3          
+   4          u8 time_led[] = {0x11, 0x04, 0x04, 0x04, 0x04};       //LED流转间隔 *100
+   5          u8 Mode_led = 1;
+   6          u8 pwm = 4;
+   7          
+   8          u8 Mode_Option = 0;     //设置模式位  0无/1流转方式/2流转间隔
+   9          u8 led_lighting = 0;    //LED亮度
+  10          bit flag_led = 0;       //LED工作标志
+  11          bit flag_800ms = 1;
+  12          bit display_pwm = 0;
+  13          
+  14          void Delay5ms()   //@11.0592MHz
+  15          {
+  16   1        unsigned char i, j;
+  17   1      
+  18   1        i = 54;
+  19   1        j = 199;
+  20   1        do
+  21   1        {
+  22   2          while (--j);
+  23   2        } while (--i);
+  24   1      }
+  25          
+  26          void main(void)
+  27          {
+  28   1        u8 flag_dat = 0;
+  29   1        
+  30   1        All_init();
+  31   1        Timer0Init();
+  32   1        Timer1Init();
+  33   1        flag_dat = Read_E2PROM(0x00);     //读取E2PROM写入标志位
+  34   1        if(flag_dat == 0x11)
+  35   1        {
+  36   2          time_led[0] = flag_dat;
+  37   2          Delay5ms();
+  38   2          time_led[1] = Read_E2PROM(0x01);
+  39   2          Delay5ms();
+  40   2          time_led[2] = Read_E2PROM(0x02);
+  41   2          Delay5ms();
+  42   2          time_led[3] = Read_E2PROM(0x03);
+  43   2          Delay5ms();
+  44   2          time_led[4] = Read_E2PROM(0x04);
+  45   2          Delay5ms();
+  46   2        }
+  47   1        LED_work(0xff);
+  48   1        EA = 1;
+  49   1        while(1)
+  50   1        {
+  51   2          Key_press();
+  52   2        }
+  53   1      }
+  54          
+C51 COMPILER V9.59.0.0   MAIN                                                              07/26/2020 16:29:52 PAGE 2   
+
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    102    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      9    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      3    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,69 @@
+C51 COMPILER V9.59.0.0   MAIN                                                              03/21/2019 17:52:40 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN ..\OBJ\main.obj
+COMPILER INVOKED BY: F:\Keil_v5\C51\BIN\C51.EXE main.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(..\INC) DEBUG OBJECTEXTEND 
+                    -PRINT(..\OBJ\main.lst) TABS(2) OBJECT(..\OBJ\main.obj)
+
+line level    source
+
+   1          #include <stc15.h>
+   2          #include "sys.h"
+   3          
+   4          bit flag_1s = 0;
+   5          bit flag_error = 0;
+   6          int Realtemper = 0;
+   7          u8 Lowtemper = 20, Hightemper = 30;
+   8          u8 temp_mode = 0;
+   9          u8 mode = 0;
+  10          u8 temp_option[] = {16, 16, 16, 16};
+  11          
+  12          void main(void)
+  13          {
+  14   1        int temp;     //存储温度的临时变量
+  15   1        
+  16   1        AllInit();
+  17   1        Start18B20();
+  18   1        Timer0Init();
+  19   1        EA = 1;
+  20   1        while(1)
+  21   1        {
+  22   2          if(flag_1s == 1)    //1s读取一次温度
+  23   2          {
+  24   3            flag_1s = 0;
+  25   3            Get18B20Temp(&temp);
+  26   3            temp >>= 4;     //温度整数部分
+  27   3            if((temp >= 0) && (temp <= 60))   //显示温度在0-60℃
+  28   3              Realtemper = temp;
+  29   3            Start18B20();
+  30   3          }
+  31   2          
+  32   2          //判断温度区间
+  33   2          if(Realtemper > Hightemper)
+  34   2            temp_mode = 2;
+  35   2          else if(Realtemper < Lowtemper)
+  36   2            temp_mode = 0;
+  37   2          else
+  38   2            temp_mode = 1;      
+  39   2            
+  40   2          KeyPress();
+  41   2          TubeShow();
+  42   2        }
+  43   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    150    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     10       2
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      2    ----
+END OF MODULE INFORMATION.
+
+C51 COMPILER V9.59.0.0   MAIN                                                              03/21/2019 17:52:40 PAGE 2   
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

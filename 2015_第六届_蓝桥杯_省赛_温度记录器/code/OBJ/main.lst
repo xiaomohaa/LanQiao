@@ -1,0 +1,81 @@
+C51 COMPILER V9.59.0.0   MAIN                                                              03/21/2019 19:11:20 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN ..\OBJ\main.obj
+COMPILER INVOKED BY: F:\Keil_v5\C51\BIN\C51.EXE main.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(..\INC) DEBUG OBJECTEXTEND 
+                    -PRINT(..\OBJ\main.lst) TABS(2) OBJECT(..\OBJ\main.obj)
+
+line level    source
+
+   1          #include <stc15.h>
+   2          #include "sys.h"
+   3          
+   4          bit flag_temper = 0;
+   5          bit flag_led = 0;
+   6          bit flag_10ms = 0;
+   7          u8 Time_temper[] = {1, 5, 30, 60};  //储存时间间隔
+   8          u8 time_index = 0;      //时间间隔索引
+   9          u16 Realtemper[11];     //存储温度
+  10          u8 temper_index = 0;    //温度索引
+  11          u8 hour = 0x23, min = 0x59, sec = 0x50;   //时间
+  12          u8 mode = 0;
+  13          
+  14          void main(void)
+  15          {
+  16   1        int temp;
+  17   1        
+  18   1        AllInit();
+  19   1        Start18B20();
+  20   1        EA = 0;
+  21   1        DS1302Init();
+  22   1        Timer0Init();
+  23   1        EA = 1;
+  24   1        while(1)
+  25   1        {
+  26   2          if(flag_temper)     //时间到了采集温度
+  27   2          {
+  28   3            flag_temper = 0;
+  29   3            Get18B20Temp(&temp);
+  30   3            temp >>= 4;
+  31   3            if((temp >= 0) && (temp <= 60))
+  32   3            {
+  33   4              Realtemper[temper_index] = temp;
+  34   4              temper_index ++;
+  35   4              if(temper_index >= 10)
+  36   4              {
+  37   5                flag_led = 1;       //打开LED
+  38   5                temper_index = 0;
+  39   5                mode = 2;
+  40   5              }
+  41   4            }
+  42   3            Start18B20();
+  43   3          }
+  44   2          
+  45   2          if(flag_10ms)
+  46   2          {
+  47   3            flag_10ms = 0;
+  48   3            hour = Read_Ds1302(0x85);
+  49   3            min = Read_Ds1302(0x83);
+  50   3            sec = Read_Ds1302(0x81);
+  51   3          }
+  52   2            
+  53   2          KeyPress();
+  54   2        }
+C51 COMPILER V9.59.0.0   MAIN                                                              03/21/2019 19:11:20 PAGE 2   
+
+  55   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    167    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     32       2
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      3    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,77 @@
+C51 COMPILER V9.59.0.0   MAIN                                                              03/11/2019 16:39:35 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN ..\OBJ\main.obj
+COMPILER INVOKED BY: F:\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\INC) DEBUG OBJECTEXTEND PRINT(
+                    -..\OBJ\main.lst) TABS(2) OBJECT(..\OBJ\main.obj)
+
+line level    source
+
+   1          #include <stc15.h>
+   2          #include "sys.h"
+   3          
+   4          bit mode = 1;     //0-手动模式，1-自动模式
+   5          bit flag_buzz = 1, flag_relay = 0;
+   6          bit flag_option = 0, flag_write = 0;
+   7          bit flag_100ms = 0;
+   8          u8 wet_value = 50, real_wet;
+   9          u8 Realtime[] = {0x19, 0x03, 0x11, 0x08, 0x30, 0x00, 0x02};
+  10          
+  11          void main(void)
+  12          {
+  13   1        static u8 index = 0;
+  14   1        
+  15   1        All_Init();
+  16   1        InitDS1302();
+  17   1        Timer0Init();
+  18   1        
+  19   1        if(Read_E2PROM(0) == 0x12)
+  20   1          wet_value = Read_E2PROM(1);
+  21   1        
+  22   1        EA = 1;
+  23   1        while(1)
+  24   1        {
+  25   2          if(flag_100ms)
+  26   2          {
+  27   3            flag_100ms = 0;
+  28   3            
+  29   3            //更新时间程序
+  30   3            real_wet = Read_AIN(0x03);
+  31   3            GetRealTime(Realtime);
+  32   3            
+  33   3            //写E2PROM程序
+  34   3            if(flag_write == 1)
+  35   3            {
+  36   4              if(index == 0)
+  37   4                Write_E2PROM(index, 0x12);
+  38   4              else if(index == 1)
+  39   4              {
+  40   5                Write_E2PROM(index, wet_value);
+  41   5                flag_write = 0;
+  42   5                index = 0;
+  43   5              }
+  44   4              index ++;
+  45   4            }
+  46   3          }
+  47   2          
+  48   2          Key_press();
+  49   2          Nixie_Show();
+  50   2        }
+  51   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+C51 COMPILER V9.59.0.0   MAIN                                                              03/11/2019 16:39:35 PAGE 2   
+
+   CODE SIZE        =     93    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     10    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      6    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

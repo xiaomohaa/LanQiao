@@ -1,0 +1,134 @@
+C51 COMPILER V9.59.0.0   SYS                                                               03/06/2019 13:25:46 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE SYS
+OBJECT MODULE PLACED IN ..\OBJ\sys.obj
+COMPILER INVOKED BY: F:\Keil_v5\C51\BIN\C51.EXE ..\SYSTEM\sys.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\INC) DEBUG OBJECTEXTE
+                    -ND PRINT(..\OBJ\sys.lst) TABS(2) OBJECT(..\OBJ\sys.obj)
+
+line level    source
+
+   1          #include "sys.h"
+   2          
+   3          void AllInit(void)
+   4          {
+   5   1        P2 = (P2 & 0x1f) | 0x80;  //open Y4C
+   6   1        P0 = 0xff;
+   7   1        P2 = (P2 & 0x1f) | 0xc0;  //open Y6C
+   8   1        P0 = 0x00;
+   9   1        P2 = (P2 & 0x1f) | 0xa0;  //open Y5C
+  10   1        P0 = 0x00;
+  11   1        P2 = P2 & 0x1f;
+  12   1      }
+  13          
+  14          void Timer0Init(void)   //100微秒@11.0592MHz
+  15          {
+  16   1        AUXR |= 0x80;   //定时器时钟1T模式
+  17   1        TMOD &= 0xF0;   //设置定时器模式
+  18   1        TL0 = 0xAE;   //设置定时初值
+  19   1        TH0 = 0xFB;   //设置定时初值
+  20   1        TF0 = 0;    //清除TF0标志
+  21   1        TR0 = 1;    //定时器0开始计时
+  22   1        ET0 = 1;
+  23   1      }
+  24          
+  25          void Timer0(void) interrupt 1
+  26          {
+  27   1        static u8 T0count1 = 0, T0count3 = 0;
+  28   1        static u16 T0count2 = 0, T0count4 = 0;
+  29   1        u8 temp;
+  30   1        
+  31   1        T0count1 ++;
+  32   1        
+  33   1        if(flag_temper)
+  34   1          T0count4 ++;
+  35   1        else
+  36   1          T0count4 = 0;
+  37   1        
+  38   1        if(flag_fan)
+  39   1        {
+  40   2          T0count2 ++;
+  41   2          T0count3 ++;
+  42   2        }
+  43   1          
+  44   1        if(T0count1 >= 20)    //2ms
+  45   1        {
+  46   2          T0count1 = 0;
+  47   2          flag_2ms = 1;
+  48   2        }
+  49   1        
+  50   1        if(T0count4 >= 2000)  //500ms show temperture
+  51   1        {
+  52   2          T0count4 = 0;
+  53   2          flag_500ms = 1;
+  54   2        }
+C51 COMPILER V9.59.0.0   SYS                                                               03/06/2019 13:25:46 PAGE 2   
+
+  55   1        
+  56   1        if(flag_fan)
+  57   1        {
+  58   2          switch(modebackup)
+  59   2          {
+  60   3            case 1: temp = 2; break;
+  61   3            case 2: temp = 3; break;
+  62   3            case 3: temp = 7; break;
+  63   3          }
+  64   2          
+  65   2          if(T0count3 <= temp)
+  66   2            PWM = 1;
+  67   2          else
+  68   2          {
+  69   3            PWM = 0;
+  70   3            if(T0count3 >= 10)
+  71   3              T0count3 = 0;
+  72   3          }
+  73   2        }
+  74   1        else
+  75   1          T0count3 = 0;
+  76   1        
+  77   1        if(T0count2 >= 10000)               //1s
+  78   1        {
+  79   2          T0count2 = 0;
+  80   2          sec --;
+  81   2          if(sec < 0)       //sec
+  82   2          {
+  83   3            sec = 59;
+  84   3            min --;
+  85   3            if(min < 0)     //min
+  86   3            {
+  87   4              min = 0;      //stop
+  88   4              min = 0;      //stop
+  89   4              flag_fan = 0;
+  90   4            }
+  91   3          }
+  92   2        }
+  93   1        LEDWork();
+  94   1        TubeScan();
+  95   1      }
+  96          
+  97          
+  98          
+  99          
+ 100          
+ 101          
+ 102          
+ 103          
+ 104          
+ 105          
+ 106          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    303    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      6       1
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+C51 COMPILER V9.59.0.0   SYS                                                               03/06/2019 13:25:46 PAGE 3   
+
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

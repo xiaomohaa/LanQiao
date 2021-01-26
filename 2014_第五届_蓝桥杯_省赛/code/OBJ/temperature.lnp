@@ -1,0 +1,7 @@
+"..\OBJ\display.obj",
+"..\OBJ\key.obj",
+"..\OBJ\ds18b20.obj",
+"..\OBJ\sys.obj",
+"..\OBJ\main.obj" 
+TO "..\OBJ\temperature" 
+PRINT("..\OBJ\temperature.m51") RAMSIZE(256) 

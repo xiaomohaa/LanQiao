@@ -1,0 +1,70 @@
+C51 COMPILER V9.59.0.0   DISPLAY                                                           03/12/2019 12:16:08 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE DISPLAY
+OBJECT MODULE PLACED IN ..\OBJ\display.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE ..\HARDWARE\display.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\INC) DEBUG OBJE
+                    -CTEXTEND PRINT(..\OBJ\display.lst) TABS(2) OBJECT(..\OBJ\display.obj)
+
+line level    source
+
+   1          #include "sys.h"
+   2          
+   3          unsigned char code table[]={0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xf8, 
+   4                                      0x80, 0x90, 0x88, 0x83, 0xc6, 0xa1, 0x86, 0x8e,
+   5                                      0xff, 0xbf};
+   6          u8 TubeBuff[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+   7          u8 smg1, smg2, smg3, smg4, smg5, smg6, smg7, smg8;
+   8          
+   9          void TubeScan(void)
+  10          {
+  11   1        static u8 index = 0;
+  12   1        
+  13   1        P2 = (P2 & 0x1f) | 0xe0;
+  14   1        P0 = 0xff;
+  15   1        P2 = (P2 & 0x1f) | 0xc0;
+  16   1        P0 = (0x01 << index);
+  17   1        P2 = (P2 & 0x1f) | 0xe0;
+  18   1        P0 = TubeBuff[index];
+  19   1        P2 = P2 & 0x1f;
+  20   1        
+  21   1        index ++;
+  22   1        index &= 0x07;
+  23   1      }
+  24          
+  25          void TubeShow(void)
+  26          { 
+  27   1        smg1 = temper_high / 10;
+  28   1        smg2 = temper_high % 10;
+  29   1        smg3 = temper_low / 10;
+  30   1        smg4 = temper_low % 10;
+  31   1        smg5 = smg6 = 16;
+  32   1        smg7 = Real_temper / 10;
+  33   1        smg8 = Real_temper % 10;
+  34   1        
+  35   1        TubeBuff[0] = table[smg1];
+  36   1        TubeBuff[1] = table[smg2];
+  37   1        TubeBuff[2] = table[smg3];
+  38   1        TubeBuff[3] = table[smg4];
+  39   1        TubeBuff[4] = table[smg5];
+  40   1        TubeBuff[5] = table[smg6];
+  41   1        TubeBuff[6] = table[smg7];
+  42   1        TubeBuff[7] = table[smg8];
+  43   1      }
+  44          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    169    ----
+   CONSTANT SIZE    =     18    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     17    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+C51 COMPILER V9.59.0.0   DISPLAY                                                           03/12/2019 12:16:08 PAGE 2   
+
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

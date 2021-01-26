@@ -1,0 +1,96 @@
+C51 COMPILER V9.59.0.0   DISPLAY                                                           03/13/2019 22:11:08 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE DISPLAY
+OBJECT MODULE PLACED IN ..\OBJ\display.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE ..\HARDWARE\display.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\INC) DEBUG OBJE
+                    -CTEXTEND PRINT(..\OBJ\display.lst) TABS(2) OBJECT(..\OBJ\display.obj)
+
+line level    source
+
+   1          #include "sys.h"
+   2          
+   3          u8 code Nixie[] = {0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xf8, 
+   4                            0x80, 0x90, 0x88, 0x83, 0xc6, 0xa1, 0x86, 0x8e, 
+   5                            0xff, 0xbf};  //共阳数码管码字
+   6          u8 NixieBuff[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff}; //数码管显示缓冲区，初值0xff确保启动时都不亮
+   7          
+   8          u8 smg1,smg2,smg3,smg4,smg5,smg6,smg7,smg8;
+   9          
+  10          //数码管显示
+  11          void Nixie_Scan(void)
+  12          {
+  13   1        static u8 index = 0;
+  14   1        
+  15   1        P2 = (P2 & 0x1f) | 0xe0;  //数码管消隐
+  16   1        P0 =0xff;
+  17   1        
+  18   1        P2 = (P2 & 0x1f) | 0xc0;  //数码管片选
+  19   1        P0 = 0x01 << index;
+  20   1        
+  21   1        P2 = (P2 & 0x1f) | 0xe0;  //数码管段选
+  22   1        P0 = NixieBuff[index];
+  23   1        P2 &= 0x1f;
+  24   1        index ++;
+  25   1        index &= 0x07;
+  26   1      }
+  27          
+  28          //数码管显示
+  29          void Nixie_Show(void)
+  30          {
+  31   1        if(mode == 0)
+  32   1        {
+  33   2          smg1 = 16;
+  34   2          smg2 = price / 100;
+  35   2          smg3 = (price % 100) / 10;
+  36   2          smg4 = price % 10;
+  37   2          smg5 = money / 1000;
+  38   2          smg6 = (money % 1000) / 100;
+  39   2          smg7 = (money % 100) / 10;
+  40   2          smg8 = money % 10;
+  41   2        }
+  42   1        else if(mode == 1)
+  43   1        {
+  44   2          smg1 = 16;
+  45   2          smg2 = price / 100;
+  46   2          smg3 = (price % 100) / 10;
+  47   2          smg4 = price % 10;
+  48   2          smg5 = volume / 1000;
+  49   2          smg6 = (volume % 1000) / 100;
+  50   2          smg7 = (volume % 100) / 10;
+  51   2          smg8 = volume % 10;
+  52   2        }
+  53   1      
+  54   1        NixieBuff[0] = Nixie[smg1];
+C51 COMPILER V9.59.0.0   DISPLAY                                                           03/13/2019 22:11:08 PAGE 2   
+
+  55   1        NixieBuff[1] = Nixie[smg2] & 0x7f;
+  56   1        NixieBuff[2] = Nixie[smg3];
+  57   1        NixieBuff[3] = Nixie[smg4];
+  58   1        NixieBuff[4] = Nixie[smg5];
+  59   1        NixieBuff[5] = Nixie[smg6] & 0x7f;
+  60   1        NixieBuff[6] = Nixie[smg7];
+  61   1        NixieBuff[7] = Nixie[smg8];
+  62   1      }
+  63          
+  64          void Led_illume(u8 dat)
+  65          {
+  66   1        P0 = 0xff;
+  67   1        P2 = (P2 & 0x1f) | 0x80;  //打开Y4C（LED）
+  68   1        P0 = dat;         //点亮LED
+  69   1        P2 = P2 & 0x1f;
+  70   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    347    ----
+   CONSTANT SIZE    =     18    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     17    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

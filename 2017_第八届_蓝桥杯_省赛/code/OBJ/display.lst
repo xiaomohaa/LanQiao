@@ -1,0 +1,163 @@
+C51 COMPILER V9.59.0.0   DISPLAY                                                           03/07/2019 18:10:57 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE DISPLAY
+OBJECT MODULE PLACED IN ..\OBJ\display.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE ..\HARDWARE\display.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\INC) DEBUG OBJE
+                    -CTEXTEND PRINT(..\OBJ\display.lst) TABS(2) OBJECT(..\OBJ\display.obj)
+
+line level    source
+
+   1          #include "sys.h"
+   2          
+   3          u8 code Nixie[] = {0xc0,0xf9,0xa4,0xb0,0x99,0x92,0x82,0xf8,0x80,0x90,0x88,0x83,0xc6,0xa1,0x86,0x8e,0xff,0x
+             -bf};  //共阳数码管码字
+   4          u8 NixieBuff[] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff}; //数码管显示缓冲区，初值0xff确保启动时都不亮
+   5          
+   6          u8 smg1,smg2,smg3,smg4,smg5,smg6,smg7,smg8;
+   7          
+   8          //数码管显示
+   9          void Nixie_Scan(void)
+  10          {
+  11   1        static u8 index = 0;
+  12   1        
+  13   1        P2 = (P2 & 0x1f) | 0xe0;  //数码管消隐
+  14   1        P0 =0xff;
+  15   1        
+  16   1        P2 = (P2 & 0x1f) | 0xc0;  //数码管片选
+  17   1        P0 = 0x01 << index;
+  18   1        
+  19   1        P2 = (P2 & 0x1f) | 0xe0;  //数码管段选
+  20   1        P0 = NixieBuff[index];
+  21   1        P2 &= 0x1f;
+  22   1        index ++;
+  23   1        index &= 0x07;
+  24   1      }
+  25          
+  26          //数码管显示
+  27          void Nixie_Show(void)
+  28          { 
+  29   1        NixieBuff[0] = Nixie[smg1];
+  30   1        NixieBuff[1] = Nixie[smg2];
+  31   1        NixieBuff[2] = Nixie[smg3];
+  32   1        NixieBuff[3] = Nixie[smg4];
+  33   1        NixieBuff[4] = Nixie[smg5];
+  34   1        NixieBuff[5] = Nixie[smg6];
+  35   1        NixieBuff[6] = Nixie[smg7];
+  36   1        NixieBuff[7] = Nixie[smg8];
+  37   1      }
+  38          
+  39          unsigned char BCDToNum(unsigned char bcd)
+  40          {
+  41   1        unsigned char a, b;
+  42   1        
+  43   1        a = (bcd >> 4);
+  44   1        b = bcd & 0x0f;
+  45   1        
+  46   1        return (a * 10 + b);
+  47   1      }
+  48          
+  49          unsigned char NumToBCD(unsigned char num)
+  50          {
+  51   1        unsigned char a, b, bcd;
+  52   1        
+  53   1        a = (num % 10) & 0x0f;
+C51 COMPILER V9.59.0.0   DISPLAY                                                           03/07/2019 18:10:57 PAGE 2   
+
+  54   1        b = ((num / 10) << 4) & 0xf0;
+  55   1        
+  56   1        bcd = a | b;
+  57   1        
+  58   1        return bcd;
+  59   1      }
+  60          
+  61          void Num_deal(int temp_int)
+  62          {
+  63   1        smg1 = smg2 = smg3 = smg4 = smg5 = 16;
+  64   1        smg6 = (temp_int % 100) / 10; 
+  65   1        smg7 = temp_int % 10;
+  66   1        smg8 = 12;
+  67   1      } 
+  68          
+  69          void RefreshTime(unsigned char *time)
+  70          {
+  71   1        if(mode == 0)
+  72   1        {
+  73   2          smg1 = BCDToNum(time[3]) / 10;    //时钟十位
+  74   2          smg2 = BCDToNum(time[3]) % 10;    //时钟个位  
+  75   2          smg4 = BCDToNum(time[4]) / 10;    //分钟十位
+  76   2          smg5 = BCDToNum(time[4]) % 10;    //分钟个位  
+  77   2          smg7 = BCDToNum(time[5]) / 10;    //秒针十位
+  78   2          smg8 = BCDToNum(time[5]) % 10;    //秒针个位
+  79   2          
+  80   2          if(smg8 % 2 == 0)
+  81   2            smg3 = smg6 = 16;
+  82   2          else
+  83   2            smg3 = smg6 = 17;
+  84   2        }
+  85   1        else if(mode == 1)
+  86   1        {
+  87   2          smg1 = OptionTime[0] / 10;    //设置时钟十位
+  88   2          smg2 = OptionTime[0] % 10;    //设置时钟个位
+  89   2          smg3 = 17;
+  90   2          smg4 = OptionTime[1] / 10;    //设置分钟十位
+  91   2          smg5 = OptionTime[1] % 10;    //设置分钟个位
+  92   2          smg6 = 17;
+  93   2          smg7 = OptionTime[2] / 10;    //设置秒钟十位
+  94   2          smg8 = OptionTime[2] % 10;    //设置秒钟个位
+  95   2          
+  96   2          if(flag_1s == 0)
+  97   2          {
+  98   3            switch(time_index)
+  99   3            {
+ 100   4              case 1: smg1 = smg2 = 16; break;
+ 101   4              case 2: smg4 = smg5 = 16; break;
+ 102   4              case 3: smg7 = smg8 = 16; break;
+ 103   4            }
+ 104   3          }
+ 105   2        }
+ 106   1        else if(mode == 2)
+ 107   1        {
+ 108   2          smg1 = OptionTime[3] / 10;    //闹钟时钟十位
+ 109   2          smg2 = OptionTime[3] % 10;    //闹钟时钟个位
+ 110   2          smg3 = 17;                     
+ 111   2          smg4 = OptionTime[4] / 10;    //闹钟分钟十位
+ 112   2          smg5 = OptionTime[4] % 10;    //闹钟分钟个位
+ 113   2          smg6 = 17;                     
+ 114   2          smg7 = OptionTime[5] / 10;    //闹钟秒钟十位
+ 115   2          smg8 = OptionTime[5] % 10;    //闹钟秒钟个位
+C51 COMPILER V9.59.0.0   DISPLAY                                                           03/07/2019 18:10:57 PAGE 3   
+
+ 116   2          
+ 117   2          if(flag_1s == 0)
+ 118   2          {
+ 119   3            switch(alarm_index)
+ 120   3            {
+ 121   4              case 4: smg1 = smg2 = 16; break;
+ 122   4              case 5: smg4 = smg5 = 16; break;
+ 123   4              case 6: smg7 = smg8 = 16; break;
+ 124   4            }
+ 125   3          }
+ 126   2        }
+ 127   1      }
+ 128          
+ 129          void Led_illume(u8 dat)
+ 130          {
+ 131   1        P2 = (P2 & 0x1f) | 0x80;  //打开Y4C（LED）
+ 132   1        P0 = dat;         //点亮LED
+ 133   1        P2 = P2 & 0x1f;
+ 134   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    534    ----
+   CONSTANT SIZE    =     18    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     17    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

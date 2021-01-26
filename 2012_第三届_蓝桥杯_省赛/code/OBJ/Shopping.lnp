@@ -1,0 +1,7 @@
+"..\OBJ\display.obj",
+"..\OBJ\iic.obj",
+"..\OBJ\key.obj",
+"..\OBJ\sys.obj",
+"..\OBJ\main.obj" 
+TO "..\OBJ\Shopping" 
+PRINT("..\OBJ\Shopping.m51") RAMSIZE(256) 

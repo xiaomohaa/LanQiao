@@ -1,0 +1,110 @@
+C51 COMPILER V9.59.0.0   DISPLAY                                                           03/07/2019 14:15:35 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE DISPLAY
+OBJECT MODULE PLACED IN ..\OBJ\display.obj
+COMPILER INVOKED BY: F:\Keil_v5\C51\BIN\C51.EXE ..\HARDWARE\display.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\INC) DEBUG OBJE
+                    -CTEXTEND PRINT(..\OBJ\display.lst) TABS(2) OBJECT(..\OBJ\display.obj)
+
+line level    source
+
+   1          #include "sys.h"
+   2          
+   3          unsigned char code table[]={0xc0, 0xf9, 0xa4, 0xb0, 0x99, 0x92, 0x82, 0xf8, 
+   4                                      0x80, 0x90, 0x88, 0x83, 0xc6, 0xa1, 0x86, 0x8e,
+   5                                      0xff, 0xbf};
+   6          u8 TubeBuff[] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
+   7          u8 smg1, smg2, smg3, smg4, smg5, smg6, smg7, smg8;
+   8          
+   9          void TubeScan(void)
+  10          {
+  11   1        static u8 index = 0;
+  12   1        
+  13   1        P2 = (P2 & 0x1f) | 0xe0;
+  14   1        P0 = 0xff;
+  15   1        P2 = (P2 & 0x1f) | 0xc0;
+  16   1        P0 = (0x01 << index);
+  17   1        P2 = (P2 & 0x1f) | 0xe0;
+  18   1        P0 = TubeBuff[index];
+  19   1        P2 = P2 & 0x1f;
+  20   1        
+  21   1        index ++;
+  22   1        index &= 0x07;
+  23   1      }
+  24          
+  25          void TubeShow(void)
+  26          { 
+  27   1        if(mode == 1)           //设置时间间隔界面
+  28   1        {
+  29   2          smg1 = smg2 = smg3 = smg4 = smg5 = 16;
+  30   2          smg6 = 17;
+  31   2          smg7 = Temper_time / 10;
+  32   2          smg8 = Temper_time % 10;
+  33   2        }
+  34   1        else if(mode == 2)      //采集温度时显示温度
+  35   1        {
+  36   2          smg1 = BCDToNum(Realtime[3]) / 10;
+  37   2          smg2 = BCDToNum(Realtime[3]) % 10;
+  38   2          smg4 = BCDToNum(Realtime[4]) / 10;
+  39   2          smg5 = BCDToNum(Realtime[4]) % 10;
+  40   2          smg7 = BCDToNum(Realtime[5]) / 10;
+  41   2          smg8 = BCDToNum(Realtime[5]) % 10;
+  42   2          
+  43   2          if(smg8 % 2 == 0)
+  44   2            smg3 = smg6 = 16;
+  45   2          else
+  46   2            smg3 = smg6 = 17;
+  47   2        }
+  48   1        else if(mode == 3)
+  49   1        {
+  50   2          smg1 = smg6 = 17;
+  51   2          smg4 = smg5 = 16;
+  52   2          smg2 = temperno / 10;
+  53   2          smg3 = temperno % 10;
+  54   2          smg7 = Realtemper[temperno] / 10;
+C51 COMPILER V9.59.0.0   DISPLAY                                                           03/07/2019 14:15:35 PAGE 2   
+
+  55   2          smg8 = Realtemper[temperno] % 10;
+  56   2        }
+  57   1        
+  58   1        TubeBuff[0] = table[smg1];
+  59   1        TubeBuff[1] = table[smg2];
+  60   1        TubeBuff[2] = table[smg3];
+  61   1        TubeBuff[3] = table[smg4];
+  62   1        TubeBuff[4] = table[smg5];
+  63   1        TubeBuff[5] = table[smg6];
+  64   1        TubeBuff[6] = table[smg7];
+  65   1        TubeBuff[7] = table[smg8];
+  66   1      }
+  67          
+  68          void LEDLight(unsigned char dat)
+  69          {
+  70   1        P0 = 0xff;
+  71   1        P2 = (P2 & 0x1f) | 0x80;
+  72   1        P0 = dat;
+  73   1        P2 = P2 & 0x1f;
+  74   1      }
+  75          
+  76          unsigned char BCDToNum(unsigned char bcd)
+  77          {
+  78   1        unsigned char a, b;
+  79   1        
+  80   1        a = (bcd >> 4);
+  81   1        b = bcd & 0x0f;
+  82   1        
+  83   1        return (a * 10 + b);
+  84   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    359    ----
+   CONSTANT SIZE    =     18    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     17    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

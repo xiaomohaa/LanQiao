@@ -1,0 +1,8 @@
+"..\OBJ\ds1302.obj",
+"..\OBJ\iic.obj",
+"..\OBJ\key.obj",
+"..\OBJ\display.obj",
+"..\OBJ\sys.obj",
+"..\OBJ\main.obj" 
+TO "..\OBJ\watering" 
+PRINT("..\OBJ\watering.m51") RAMSIZE(256) 

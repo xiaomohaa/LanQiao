@@ -1,0 +1,229 @@
+C51 COMPILER V9.59.0.0   IIC                                                               07/26/2020 16:29:51 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE IIC
+OBJECT MODULE PLACED IN ..\OBJ\iic.obj
+COMPILER INVOKED BY: F:\Keil_v5\C51\BIN\C51.EXE ..\HARDWARE\iic.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(..\INC) DEBUG OB
+                    -JECTEXTEND PRINT(..\OBJ\iic.lst) TABS(2) OBJECT(..\OBJ\iic.obj)
+
+line level    source
+
+   1          /*
+   2            程序说明: IIC总线驱动程序
+   3            软件环境: Keil uVision 4.10 
+   4            硬件环境: CT107单片机综合实训平台 8051，12MHz
+   5            日    期: 2011-8-9
+   6          */
+   7          
+   8          #include "sys.h"
+   9          
+  10          #define somenop {_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_
+             -nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_
+             -nop_();_nop_();_nop_();_nop_();_nop_();_nop_();_nop_();}    
+  11          
+  12          
+  13          #define SlaveAddrW 0xA0
+  14          #define SlaveAddrR 0xA1
+  15          
+  16          //总线引脚定义
+  17          sbit SDA = P2^1;  /* 数据线 */
+  18          sbit SCL = P2^0;  /* 时钟线 */
+  19          
+  20          
+  21          //总线启动条件
+  22          void IIC_Start(void)
+  23          {
+  24   1        SDA = 1;
+  25   1        SCL = 1;
+  26   1        somenop;
+  27   1        SDA = 0;
+  28   1        somenop;
+  29   1        SCL = 0;  
+  30   1      }
+  31          
+  32          //总线停止条件
+  33          void IIC_Stop(void)
+  34          {
+  35   1        SDA = 0;
+  36   1        SCL = 1;
+  37   1        somenop;
+  38   1        SDA = 1;
+  39   1      }
+  40          
+  41          //应答位控制
+  42          void IIC_Ack(bit ackbit)
+  43          {
+  44   1        if(ackbit) 
+  45   1        { 
+  46   2          SDA = 0;
+  47   2        }
+  48   1        else 
+  49   1        {
+  50   2          SDA = 1;
+  51   2        }
+  52   1        somenop;
+C51 COMPILER V9.59.0.0   IIC                                                               07/26/2020 16:29:51 PAGE 2   
+
+  53   1        SCL = 1;
+  54   1        somenop;
+  55   1        SCL = 0;
+  56   1        SDA = 1; 
+  57   1        somenop;
+  58   1      }
+  59          
+  60          //等待应答
+  61          bit IIC_WaitAck(void)
+  62          {
+  63   1        SDA = 1;
+  64   1        somenop;
+  65   1        SCL = 1;
+  66   1        somenop;
+  67   1        if(SDA)    
+  68   1        {   
+  69   2          SCL = 0;
+  70   2          IIC_Stop();
+  71   2          return 0;
+  72   2        }
+  73   1        else  
+  74   1        { 
+  75   2          SCL = 0;
+  76   2          return 1;
+  77   2        }
+  78   1      }
+  79          
+  80          //通过I2C总线发送数据
+  81          void IIC_SendByte(unsigned char byt)
+  82          {
+  83   1        unsigned char i;
+  84   1        for(i=0;i<8;i++)
+  85   1        {   
+  86   2          if(byt&0x80) 
+  87   2          { 
+  88   3            SDA = 1;
+  89   3          }
+  90   2          else 
+  91   2          {
+  92   3            SDA = 0;
+  93   3          }
+  94   2          somenop;
+  95   2          SCL = 1;
+  96   2          byt <<= 1;
+  97   2          somenop;
+  98   2          SCL = 0;
+  99   2        }
+ 100   1      }
+ 101          
+ 102          //从I2C总线上接收数据
+ 103          unsigned char IIC_RecByte(void)
+ 104          {
+ 105   1        unsigned char da;
+ 106   1        unsigned char i;
+ 107   1        
+ 108   1        for(i=0;i<8;i++)
+ 109   1        {   
+ 110   2          SCL = 1;
+ 111   2          somenop;
+ 112   2          da <<= 1;
+ 113   2          if(SDA) 
+ 114   2          da |= 0x01;
+C51 COMPILER V9.59.0.0   IIC                                                               07/26/2020 16:29:51 PAGE 3   
+
+ 115   2          SCL = 0;
+ 116   2          somenop;
+ 117   2        }
+ 118   1        return da;
+ 119   1      }
+ 120          
+ 121          /*******************************************************************************
+ 122          * 函数名  ：Read_AIN
+ 123          * 输入值  ：unsigned char chn
+ 124          * 返回值  ：unsigend char dat
+ 125          * 作者    ：小默haa
+ 126          * 时间    ：2019年2月25日
+ 127          * 功能描述：读取PCF8591AIN采集数据
+ 128          * 备注    ：chn为PCF8591的通道
+ 129          *******************************************************************************/
+ 130          unsigned char Read_AIN(unsigned char chn)
+ 131          {
+ 132   1        unsigned char dat, val, ad_pwm;
+ 133   1        EA = 0;
+ 134   1        IIC_Start();            //IIC总线起始信号             
+ 135   1        IIC_SendByte(0x90);     //PCF8591的写设备地址   
+ 136   1        IIC_WaitAck();          //等待从机应答    
+ 137   1        IIC_SendByte(chn);      //写入PCF8591的控制字节   
+ 138   1        IIC_WaitAck();          //等待从机应答            
+ 139   1        IIC_Stop();             //IIC总线停止信号         
+ 140   1        
+ 141   1        IIC_Start();            //IIC总线起始信号                 
+ 142   1        IIC_SendByte(0x91);     //PCF8591的读设备地址   
+ 143   1        IIC_WaitAck();          //等待从机应答    
+ 144   1        dat = IIC_RecByte();    //读取PCF8591通道3的数据      
+ 145   1        IIC_Ack(0);             //产生非应答信号        
+ 146   1        IIC_Stop();             //IIC总线停止信号   
+ 147   1        val = (dat * 50) / 255;
+ 148   1        
+ 149   1        if((val >= 38) && (val <= 50))
+ 150   1          ad_pwm = 4;
+ 151   1        else if((val >= 26) && (val < 38))
+ 152   1          ad_pwm = 3;
+ 153   1        else if((val >= 14) && (val < 26))
+ 154   1          ad_pwm = 2;
+ 155   1        else if((val >= 0) && (val < 14))
+ 156   1          ad_pwm = 1;
+ 157   1        
+ 158   1        EA = 1;
+ 159   1        
+ 160   1        return ad_pwm;  
+ 161   1      }
+ 162          
+ 163          
+ 164          void Write_E2PROM(unsigned char add, unsigned char dat)
+ 165          {
+ 166   1        EA = 0;
+ 167   1        IIC_Start();
+ 168   1        IIC_SendByte(0xa0); //发送器件地址
+ 169   1        IIC_WaitAck();
+ 170   1        IIC_SendByte(add);  //发送操作地址
+ 171   1        IIC_WaitAck();
+ 172   1        IIC_SendByte(dat);  //写一字节
+ 173   1        IIC_WaitAck();
+ 174   1        IIC_Stop();
+ 175   1        somenop;
+ 176   1        EA = 1;
+C51 COMPILER V9.59.0.0   IIC                                                               07/26/2020 16:29:51 PAGE 4   
+
+ 177   1      }
+ 178          
+ 179          unsigned char Read_E2PROM(unsigned char add)
+ 180          {
+ 181   1        unsigned char d;
+ 182   1        
+ 183   1        IIC_Start();
+ 184   1        IIC_SendByte(0xa0);   //发送器件地址
+ 185   1        IIC_WaitAck();
+ 186   1        IIC_SendByte(add);    //发送要操作的地址
+ 187   1        IIC_WaitAck();
+ 188   1        IIC_Stop();
+ 189   1        
+ 190   1        IIC_Start();
+ 191   1        IIC_SendByte(0xa1);   //发送读操作
+ 192   1        IIC_WaitAck();
+ 193   1        d = IIC_RecByte();  //读一字节
+ 194   1        IIC_Ack(0);
+ 195   1        IIC_Stop();
+ 196   1        return d;
+ 197   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    758    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       1
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

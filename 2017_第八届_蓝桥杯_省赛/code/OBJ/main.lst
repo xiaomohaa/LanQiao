@@ -1,0 +1,88 @@
+C51 COMPILER V9.59.0.0   MAIN                                                              03/07/2019 18:10:58 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN ..\OBJ\main.obj
+COMPILER INVOKED BY: D:\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE INCDIR(..\INC) DEBUG OBJECTEXTEND PRINT(
+                    -..\OBJ\main.lst) TABS(2) OBJECT(..\OBJ\main.obj)
+
+line level    source
+
+   1          #include <stc15.h>
+   2          #include "sys.h"
+   3          
+   4          u8 Led_dat = 0xff;
+   5          u8 mode = 0;
+   6          bit flag_1s = 0, flag_100ms = 0;
+   7          bit flag_temp = 0;
+   8          bit flag_led = 0;
+   9          bit flag_alarm = 1;
+  10          
+  11          u8 AlarmTime[] = {0x00, 0x00, 0x00};      //闹钟时间
+  12          signed char OptionTime[] = {0, 0, 0, 0, 0, 0};    //0-2时间 3-5闹钟
+  13          
+  14          u8 bufTime[] = {  //2019年3月2日 星期六 23:59:50
+  15                0x19, 0x03, 0x02, 0x23, 0x59, 0x50, 0x06
+  16            };  //日期时间缓冲区
+  17            
+  18          void main(void)
+  19          {
+  20   1        bit res = 0;
+  21   1        int Temp = 0;           //读取当前的温度值
+  22   1        int Temp_int = 999;     //温度值的整数部分
+  23   1        
+  24   1        All_Init();
+  25   1        Timer0Init();
+  26   1        Start18B20();
+  27   1        InitDS1302(&bufTime);
+  28   1        EA = 1;
+  29   1        while(1)
+  30   1        {
+  31   2          KeyPress();
+  32   2          Nixie_Show();
+  33   2          Led_illume(Led_dat);
+  34   2          
+  35   2          if(flag_100ms == 1)   //每100ms更新一次时间
+  36   2          {
+  37   3            flag_100ms = 0;
+  38   3            GetRealTime(&bufTime);          //获取当前时间
+  39   3            if(flag_temp == 0)
+  40   3              RefreshTime(&bufTime);          //显示日期
+  41   3            
+  42   3            IsAlarm(&bufTime);              //是否到了闹钟时间
+  43   3            
+  44   3          }
+  45   2          
+  46   2          if((S4 == 0) && (mode == 0) && (flag_alarm == 1) && (flag_led == 0))
+  47   2          {
+  48   3            flag_temp = 1;              //显示温度标志
+  49   3            res = Get18B20Temp(&Temp);  //读取当前温度
+  50   3            if(res)                     //如果读取到
+  51   3              Temp_int = Temp >> 4;     //分离出温度值整数部分
+  52   3            Start18B20();               //重新启动下一次转换
+  53   3            Num_deal(Temp_int);         //显示温度
+  54   3          }
+C51 COMPILER V9.59.0.0   MAIN                                                              03/07/2019 18:10:58 PAGE 2   
+
+  55   2          else
+  56   2            flag_temp = 0;
+  57   2        }
+  58   1      }
+  59          
+  60          
+  61          
+  62          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    141    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     18       4
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      5       1
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,153 @@
+C51 COMPILER V9.59.0.0   DS18B20                                                           03/21/2019 19:11:20 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE DS18B20
+OBJECT MODULE PLACED IN ..\OBJ\ds18b20.obj
+COMPILER INVOKED BY: F:\Keil_v5\C51\BIN\C51.EXE ..\HARDWARE\ds18b20.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(..\INC) DEBU
+                    -G OBJECTEXTEND PRINT(..\OBJ\ds18b20.lst) TABS(2) OBJECT(..\OBJ\ds18b20.obj)
+
+line level    source
+
+   1           #include "sys.h"
+   2          
+   3          sbit DS18B20_IO = P1^4;
+   4          
+   5          void Delayus(unsigned int us)
+   6          {
+   7   1        do{
+   8   2          _nop_();
+   9   2          _nop_();
+  10   2          _nop_();
+  11   2          _nop_();
+  12   2          _nop_();
+  13   2          _nop_();
+  14   2          _nop_();
+  15   2          _nop_();
+  16   2        }while(--us);
+  17   1      }
+  18          
+  19          bit Get18B20Ack(void)
+  20          {
+  21   1        bit ack;
+  22   1        
+  23   1        DS18B20_IO = 0;     //产生500us的复位脉冲
+  24   1        Delayus(500);
+  25   1        EA = 0;             //禁止总中断
+  26   1        DS18B20_IO = 1;     //延时60us
+  27   1        Delayus(60);
+  28   1        EA = 1;             //重新使能总中断
+  29   1        ack = DS18B20_IO;   //读取存在脉冲
+  30   1        while(!DS18B20_IO); //等待存在脉冲结束
+  31   1        
+  32   1        return ack;   
+  33   1      }
+  34          
+  35          void DS18B20Write(unsigned char dat)
+  36          {
+  37   1        unsigned char mask;
+  38   1                  
+  39   1        for(mask = 0x01; mask != 0; mask <<= 1) //低位在先，依次移出8个bit
+  40   1        {
+  41   2          EA = 0;
+  42   2          DS18B20_IO = 0;       //产生2us低电平脉冲
+  43   2          Delayus(2);
+  44   2          if(dat & mask)        //输出该bit值
+  45   2            DS18B20_IO = 1;
+  46   2          else
+  47   2            DS18B20_IO = 0;
+  48   2          EA = 1;
+  49   2          Delayus(60);          //延时60us
+  50   2          DS18B20_IO = 1;       //拉高通信引脚
+  51   2        }
+  52   1      }
+  53          
+  54          unsigned char DS18B20Read(void)
+C51 COMPILER V9.59.0.0   DS18B20                                                           03/21/2019 19:11:20 PAGE 2   
+
+  55          {
+  56   1        unsigned char mask, dat = 0;
+  57   1        
+  58   1        for(mask = 0x01; mask != 0; mask <<= 1) //低位在先，依次采集8个bit
+  59   1        {
+  60   2          EA = 0;
+  61   2          DS18B20_IO = 0;       //产生2us低电平脉冲
+  62   2          Delayus(2);
+  63   2          DS18B20_IO = 1;       //结束低电平脉冲，等待18B20输出数据
+  64   2          Delayus(2);           //延时2us
+  65   2          EA = 1;
+  66   2          if(DS18B20_IO)        //读取通信引脚上的值
+  67   2            dat |= mask;
+  68   2          Delayus(60);          //再延时60us
+  69   2        }
+  70   1        
+  71   1        return dat; 
+  72   1      }
+  73          
+  74          bit Start18B20()
+  75          {
+  76   1        bit ack;
+  77   1        static bit flag = 1;
+  78   1      
+  79   1        ack = Get18B20Ack();    //执行总线复位，并获取18B20应答
+  80   1        if(ack == 0)            //如18B20正确应答，则启动一次转换
+  81   1        {
+  82   2          DS18B20Write(0xCC);   //跳过ROM操作
+  83   2          
+  84   2          if(flag)
+  85   2          {
+  86   3            flag = 0;
+  87   3            DS18B20Write(0x4e);     //写暂存器指令4E
+  88   3            DS18B20Write(0x4b);     //写高速缓存器TH高温限值75度
+  89   3            DS18B20Write(0x00);     //写高速缓存器TL低温限值0度
+  90   3            DS18B20Write(0x1f);     //写配置寄存器4
+  91   3                                    //0x1f ： 0.5000°C  转换时间93.75ms
+  92   3                                    //0x3f ： 0.2000°C  转换时间187.5ms
+  93   3                                    //0x5f ： 0.1250°C  转换时间375ms
+  94   3                                    //0x7f ： 0.0625°C  转换时间750ms
+  95   3          }
+  96   2          
+  97   2          ack = Get18B20Ack();    //执行总线复位，并获取18B20应答
+  98   2          if(ack == 0)            //如18B20正确应答，则启动一次转换
+  99   2          {
+ 100   3            DS18B20Write(0xCC);   //跳过ROM操作
+ 101   3            DS18B20Write(0x44);   //启动一次温度转换
+ 102   3          }
+ 103   2        }
+ 104   1      
+ 105   1        return ~ack;            //ack == 0 表示操作成功，所以返回值对其取反
+ 106   1      }
+ 107          
+ 108          bit Get18B20Temp(int *temp)
+ 109          {
+ 110   1        bit ack;
+ 111   1        unsigned char LSB, MSB;     //16bit温度值的低字节和高字节
+ 112   1      
+ 113   1        ack = Get18B20Ack();        //执行总线复位，并获取18B20应答
+ 114   1        if(ack == 0)                //如18B20正确应答，则读取温度值
+ 115   1        {
+ 116   2          DS18B20Write(0xCC);       //跳过ROM操作
+C51 COMPILER V9.59.0.0   DS18B20                                                           03/21/2019 19:11:20 PAGE 3   
+
+ 117   2          DS18B20Write(0xBE);       //发送读命令
+ 118   2          LSB = DS18B20Read();      //读温度值的低字节
+ 119   2          MSB = DS18B20Read();      //读温度值的高字节
+ 120   2          *temp = ( MSB << 8) + LSB;  //合成16bit的整数
+ 121   2        }
+ 122   1      
+ 123   1        return ~ack;                //ack == 0 表示操作应答，所以返回值为1其取反值
+ 124   1      } 
+ 125          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    243    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----       1
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      1       3
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

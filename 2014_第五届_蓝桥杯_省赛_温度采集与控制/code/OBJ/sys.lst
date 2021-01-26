@@ -1,0 +1,109 @@
+C51 COMPILER V9.59.0.0   SYS                                                               03/21/2019 17:52:40 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE SYS
+OBJECT MODULE PLACED IN ..\OBJ\sys.obj
+COMPILER INVOKED BY: F:\Keil_v5\C51\BIN\C51.EXE ..\SYSTEM\sys.c LARGE OPTIMIZE(8,SPEED) BROWSE INCDIR(..\INC) DEBUG OBJE
+                    -CTEXTEND PRINT(..\OBJ\sys.lst) TABS(2) OBJECT(..\OBJ\sys.obj)
+
+line level    source
+
+   1          #include "sys.h"
+   2          
+   3          void AllInit(void)
+   4          {
+   5   1        P2 = (P2 & 0x1f) | 0x80;
+   6   1        P0 = 0xff;
+   7   1        P2 = (P2 & 0x1f) | 0xc0;
+   8   1        P0 = 0x00;
+   9   1        P2 = (P2 & 0x1f) | 0xa0;
+  10   1        P0 = 0x00;
+  11   1        P2 = P2 & 0x1f;
+  12   1      }
+  13          
+  14          
+  15          void Timer0Init(void)   //1毫秒@11.0592MHz
+  16          {
+  17   1        AUXR |= 0x80;   //定时器时钟1T模式
+  18   1        TMOD &= 0xF0;   //设置定时器模式
+  19   1        TL0 = 0xCD;   //设置定时初值
+  20   1        TH0 = 0xD4;   //设置定时初值
+  21   1        TF0 = 0;    //清除TF0标志
+  22   1        TR0 = 1;    //定时器0开始计时
+  23   1        ET0 = 1;
+  24   1      }
+  25          
+  26          void Timer0(void) interrupt 1
+  27          {
+  28   1        static u16 t00 = 0, t01 = 0;
+  29   1        u16 ledtime;
+  30   1        static u8 leddat = 0xff, ledtemp = 0;
+  31   1        
+  32   1        t00 ++;
+  33   1        t01 ++;
+  34   1        
+  35   1        if(t00 >= 1000)
+  36   1        {
+  37   2          t00 = 0;
+  38   2          flag_1s = 1;
+  39   2        }
+  40   1        
+  41   1        //错误指示灯L2
+  42   1        if(flag_error == 1)
+  43   1          leddat = leddat & 0xfd;
+  44   1        else
+  45   1          leddat = leddat | 0x02;
+  46   1        
+  47   1        //模式指示灯L1
+  48   1        switch(temp_mode)
+  49   1        {
+  50   2          case 0: ledtime = 800; break;
+  51   2          case 1: ledtime = 400; break;
+  52   2          case 2: ledtime = 200; break;
+  53   2        }
+  54   1        
+C51 COMPILER V9.59.0.0   SYS                                                               03/21/2019 17:52:40 PAGE 2   
+
+  55   1        if(t01 >= ledtime)
+  56   1        {
+  57   2          t01 = 0;
+  58   2          ledtemp = ~ledtemp;
+  59   2          if(ledtemp)
+  60   2            leddat = leddat & 0xfe;
+  61   2          else
+  62   2            leddat = leddat | 0x01;
+  63   2        }
+  64   1        
+  65   1        if(temp_mode == 2)
+  66   1        {
+  67   2          P0 = 0x00;
+  68   2          P2 = (P2 & 0x1f) | 0xa0;
+  69   2          P04 = 1;      //打开继电器
+  70   2          P2 = P2 & 0x1f;
+  71   2        }
+  72   1        else
+  73   1        {
+  74   2          P0 = 0x00;
+  75   2          P2 = (P2 & 0x1f) | 0xa0;
+  76   2          P04 = 0;      //关闭继电器
+  77   2          P2 = P2 & 0x1f;
+  78   2        }
+  79   1        
+  80   1        LEDLight(leddat);
+  81   1        TubeScan();
+  82   1        KeyScan();
+  83   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    319    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      6       2
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
